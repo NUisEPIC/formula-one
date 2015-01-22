@@ -9,7 +9,7 @@ var config = {
       name: 'formula-one'
     },
     port: 3000,
-    db: 'mongodb://localhost/formula-one-development'
+    db: process.env.MONGOLAB_URI || 'mongodb://localhost/formula-one-development'
   },
 
   test: {
