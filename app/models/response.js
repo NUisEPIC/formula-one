@@ -6,4 +6,5 @@ var response = Schema({
   // FUTURE: parsed
 });
 
-module.exports = mongoose.model('Response', response);
+module.exports.response = response;
+module.exports.Response = mongoose.model('Response', response);

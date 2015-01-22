@@ -1,13 +1,15 @@
 var mongoose = require('mongoose')
     , Schema = mongoose.Schema
     , DateRange = require('./date-range.js')
-    , FormulaIngredient = require('./formula-ingredient.js');
+    , ingredient = require('./formula-ingredient.js').ingredient;
 
 var program = new Schema({
-  name: String,
+  name: {type: String, index: {unique: true, dropDups: true}},
+  shortname: {type: String, index: {unique: true, dropDups: true}},
   description: String,
-  dates: [DateRange],
-  ingredients: [FormulaIngredient]
+  dates: [{start: { type: Date, default: Date.now },
+           end: Date}],
+  ingredients: [ingredient]
 });
 
 program.virtual('year')

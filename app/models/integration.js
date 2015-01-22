@@ -4,7 +4,7 @@ var mongoose = require('mongoose')
 // TODO: improve integration schema
 var integration = Schema({
   name: String,
-  data: Schem.Types.Mixed
+  data: Schema.Types.Mixed
 });
 
 module.exports = mongoose.model('Integration', integration);

@@ -6,9 +6,10 @@ var mongoose = require('mongoose')
 var ingredient = Schema({
   timestamp: { type: Date, default: Date.now },
   creator: String, // FUTURE: Account
-  name: String,
+  name: {type: String, index: {unique: true, dropDups: true}},
   purpose: String,
   integrations: [Integration]
 });
 
-module.exports = mongoose.model('FormulaIngredient', ingredient);
+module.exports.ingredient = ingredient;
+module.exports.FormulaIngredient = mongoose.model('FormulaIngredient', ingredient);

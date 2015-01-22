@@ -6,4 +6,5 @@ var question = Schema({
   // FUTURE: type, format, input_id, validator
 });
 
-module.exports = mongoose.model('Question', question);
+module.exports.question = question;
+module.exports.Question = mongoose.model('Question', question);
