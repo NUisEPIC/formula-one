@@ -8,10 +8,23 @@ var bodyParser = require('body-parser');
 var compress = require('compression');
 var methodOverride = require('method-override');
 
+var allowXDomainNuIsEpic = function(req, res, next) {
+  // allow cross-origin-resource sharing from
+  // any nuisepic.com domain
+  res.header('Access-Control-Allow-Origin', '*.nuisepic.com');
+  res.header('Access-Control-Allow-Origin', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+
+  // be nice to OPTIONS
+  req.method == 'OPTIONS' ? res.send(200) : next();
+}
+
 module.exports = function(app, config) {
   app.set('views', config.root + '/app/views');
   app.set('view engine', 'jade');
 
+  
+  app.use(allowXDomainNuIsEpic);
   // app.use(favicon(config.root + '/public/img/favicon.ico'));
   app.use(logger('dev'));
   app.use(bodyParser.json());
@@ -53,5 +66,5 @@ module.exports = function(app, config) {
         title: 'error'
       });
   });
-
+  
 };
