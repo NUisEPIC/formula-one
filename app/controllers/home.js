@@ -12,19 +12,15 @@ module.exports = function (app) {
 
 router.get('/', function (req, res, next) {
 
-  Program.find(function (err, articles) {
-    if (err) return next(err);
-    res.render('index', {
-      title: 'Generator-Express MVC',
-      articles: articles
-    });
+  res.render('index', {
+    title: 'Generator-Express MVC',
   });
 });
 
 router.get('/setup', function(req, res) {
   var application = new Application({name: "scf2015",
-                                     questions: [],
-                                     responses: []});
+                                     responses: [],
+                                     respondents: []});
   application.save(function(err) {
     if(err) console.log(err);
     Application.findOne({name: "scf2015"}).exec(function(err, application) {
