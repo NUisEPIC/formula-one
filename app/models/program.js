@@ -1,22 +1,26 @@
 var mongoose = require('mongoose')
-    , Schema = mongoose.Schema
-    , DateRange = require('./date-range.js')
-    , ingredient = require('./formula-ingredient.js').ingredient;
+  , Schema   = mongoose.Schema
+  , ingredient = require('./formula-ingredient.js').ingredient;
 
 var program = new Schema({
-  name: {type: String, index: {unique: true, dropDups: true}},
-  shortname: {type: String, index: {unique: true, dropDups: true}},
+  name:        { type:    String,
+                 index:   { unique:   true,
+                            dropDups: true } },
+  shortname:   { type:    String, 
+                 index:   { unique:   true,
+                            dropDups: true } },
   description: String,
-  dates: [{start: { type: Date, default: Date.now },
-           end: Date}],
-  ingredients: [ingredient]
+  dates:       [ { start: Date,
+                   end:   Date } ],
+  ingredients: [ ingredient ]
 });
 
-program.virtual('year')
+program.virtual('mostRecentYear')
        .get(function () {
          return new Date(this.dates.map(function(date) { return date.start })
-                          .sort()
-                          .reverse()[0]).getFullYear();
+                             .sort()
+                             .reverse()[0]).getFullYear();
        });
 
-module.exports = mongoose.model('Program', program);
+module.exports.program = program;
+module.exports.Program = mongoose.model('Program', program);
