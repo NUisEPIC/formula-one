@@ -1,5 +1,6 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
+  , requireAll = require('../plugins/schema-tools.js').requireAll;
   , ingredient = require('./formula-ingredient.js').ingredient;
 
 var program = new Schema({
@@ -21,6 +22,8 @@ program.virtual('mostRecentYear')
                              .sort()
                              .reverse()[0]).getFullYear();
        });
+
+requireAll(program);
 
 module.exports.program = program;
 module.exports.Program = mongoose.model('Program', program);
