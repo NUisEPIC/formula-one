@@ -11,20 +11,19 @@ var methodOverride = require('method-override');
 var allowXDomainNuIsEpic = function(req, res, next) {
   // allow cross-origin-resource sharing from
   // any nuisepic.com domain
-  res.header('Access-Control-Allow-Origin', '*.nuisepic.com');
-  res.header('Access-Control-Allow-Origin', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
   // be nice to OPTIONS
-  req.method == 'OPTIONS' ? res.send(200) : next();
+  req.method == 'OPTIONS' ? res.sendStatus(200) : next();
 }
 
 module.exports = function(app, config) {
   app.set('views', config.root + '/app/views');
   app.set('view engine', 'jade');
 
-  
-  app.use(allowXDomainNuIsEpic);
+
   // app.use(favicon(config.root + '/public/img/favicon.ico'));
   app.use(logger('dev'));
   app.use(bodyParser.json());
@@ -36,6 +35,8 @@ module.exports = function(app, config) {
   app.use(express.static(config.root + '/public'));
   app.use(methodOverride());
 
+  app.use(allowXDomainNuIsEpic);
+
   var controllers = glob.sync(config.root + '/app/controllers/*.js');
   controllers.forEach(function (controller) {
     require(controller)(app);
@@ -46,10 +47,11 @@ module.exports = function(app, config) {
     err.status = 404;
     next(err);
   });
-  
+
   if(app.get('env') === 'development'){
     app.use(function (err, req, res, next) {
       res.status(err.status || 500);
+      console.log(err);
       res.render('error', {
         message: err.message,
         error: err,
@@ -66,5 +68,5 @@ module.exports = function(app, config) {
         title: 'error'
       });
   });
-  
+
 };
