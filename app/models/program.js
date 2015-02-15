@@ -1,13 +1,13 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../plugins/schema-tools.js').requireAll;
+  , requireAll = require('../plugins/schema-tools.js').requireAll
   , ingredient = require('./formula-ingredient.js').ingredient;
 
 var program = new Schema({
   name:        { type:    String,
                  index:   { unique:   true,
                             dropDups: true } },
-  shortname:   { type:    String, 
+  shortname:   { type:    String,
                  index:   { unique:   true,
                             dropDups: true } },
   description: String,
