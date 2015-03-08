@@ -15,12 +15,10 @@ module.exports = function (app) {
 };
 
 router.get('/', function (req, res, next) {
-  res.render('index', {
-    title: 'Generator-Express MVC',
-  });
+  res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
 });
 
-router.get('/setup', function(req, res) {
+/*router.get('/setup', function(req, res) {
   var application = new Application({name: "scf2015",
                                      responses: [],
                                      respondents: []});
@@ -29,7 +27,7 @@ router.get('/setup', function(req, res) {
     Application.findOne({name: "scf2015"}).exec(function(err, application) {
       new Program({name: "Startup Career Fair",
                    shortname: "scf",
-                   description: "",
+                   description: "Startup Career Fair",
                    dates: [{end: Date.now() + 1000 * 60 * 60 * 24 * 30}],
                    ingredients: [application]}).save(function(err) {
         if(err) console.log(err);
@@ -37,7 +35,7 @@ router.get('/setup', function(req, res) {
       });
     });
   });
-});
+});*/
 
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
@@ -74,7 +72,8 @@ router.post('/:program/application', function(req, res) {
             name: {
               first: req.body.name.first,
               last: req.body.name.last,
-              full: req.body.name.first + " " + req.body.name.last},
+              full: req.body.name.first + " " + req.body.name.last
+            },
             email: req.body.email,
             hasAccount: false
           },
@@ -86,7 +85,7 @@ router.post('/:program/application', function(req, res) {
         }, function() {}, function() {});
         res.send('Looks successful enough.');
 
-        // TODO: add post('save') callback to Responses where if document.isNew, send verification email
+        // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email
       });
     });
   });
@@ -102,7 +101,7 @@ router.post('/:program/:filter/application', function(req, res) {
         ? query.where(filterArg[0]).equals(filterArg[1])
         : query.where(filterArg[0])[filterArg[1]](filterArg[2]);
     } else {
-      res.send(400, 'Malformed :filter');
+      res.send(400, 'Malformed filter');
     }
   });
 
