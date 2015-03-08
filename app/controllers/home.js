@@ -140,29 +140,31 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
   var send = function(err, data) {
     if(err) console.log(err) && res.send(500, 'Whoa, popped a gasket. Whoops.');
     if (data == '' || data == [])
-      res.send('No results!');
+      res.send([]);
     else res.send(isNaN(data) ? data : data.toString());
   }
 
   // NOTE(jordan): all queries should be 'startsWith' and case insensitive
   var rxsi = function (val) { return new RegExp('^' + val, 'i'); }
 
-  if (pfilter.indexOf(':') < 0)
+  if (pfilter && pfilter.indexOf(':') < 0)
     action = efilter, efilter = endpoint, endpoint = pfilter, pfilter = undefined;
-  if (efilter.indexOf(':') < 0)
+  if (efilter && efilter.indexOf(':') < 0)
     action = efilter, efilter = undefined;
 
   if(endpoint = 'applications') {
-    query = Response;
-  } else {
-    query = endpoint.charAt(0).toUpperCase() + endpoint.slice(1);
+    query = Response.find({});
   }
 
-  // TODO(jordan): same for pfilter
+  // TODO(jordan): same for pfilter...
 
   efilter && efilter.split(',').forEach(function(filterArg) {
     filterArg = filterArg.split(':');
-    query = filterArg.length == 2
+    if (filterArg[0].charAt(0) == '~')
+      query = filterArg.length == 2
+        ? query[filterArg[0].slice(1)](filterArg[1])
+        : query;
+    else query = filterArg.length == 2
       ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
       : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]));
   })
