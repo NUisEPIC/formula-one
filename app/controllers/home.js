@@ -125,3 +125,51 @@ router.post('/:program/:filter/application', function(req, res) {
     });
   });
 });
+
+// NOTE(jordan): LET'S BUILD TEH SUPERROUTE
+
+router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res) {
+  // NOTE(jordan): so many optional parameters!!!
+  var program   = req.params.program
+    , pfilter   = req.params.pfilter
+    , endpoint  = req.params.endpoint
+    , efilter   = req.params.efilter
+    , action    = req.params.action
+    , query;
+
+  var send = function(err, data) {
+    if(err) console.log(err) && res.send(500, 'Whoa, popped a gasket. Whoops.');
+    if (data == '' || data == [])
+      res.send('No results!');
+    else res.send(isNaN(data) ? data : data.toString());
+  }
+
+  // NOTE(jordan): all queries should be 'startsWith' and case insensitive
+  var rxsi = function (val) { return new RegExp('^' + val, 'i'); }
+
+  if (pfilter.indexOf(':') < 0)
+    action = efilter, efilter = endpoint, endpoint = pfilter, pfilter = undefined;
+  if (efilter.indexOf(':') < 0)
+    action = efilter, efilter = undefined;
+
+  if(endpoint = 'applications') {
+    query = Response;
+  } else {
+    query = endpoint.charAt(0).toUpperCase() + endpoint.slice(1);
+  }
+
+  // TODO(jordan): same for pfilter
+
+  efilter && efilter.split(',').forEach(function(filterArg) {
+    filterArg = filterArg.split(':');
+    query = filterArg.length == 2
+      ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
+      : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]));
+  })
+
+  if (action == 'count') {
+    query.count(send);
+  } else {
+    query.exec(send);
+  }
+})
