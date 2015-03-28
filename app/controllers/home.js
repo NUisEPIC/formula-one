@@ -18,25 +18,6 @@ router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
 });
 
-/*router.get('/setup', function(req, res) {
-  var application = new Application({name: "scf2015",
-                                     responses: [],
-                                     respondents: []});
-  application.save(function(err) {
-    if(err) console.log(err);
-    Application.findOne({name: "scf2015"}).exec(function(err, application) {
-      new Program({name: "Startup Career Fair",
-                   shortname: "scf",
-                   description: "Startup Career Fair",
-                   dates: [{end: Date.now() + 1000 * 60 * 60 * 24 * 30}],
-                   ingredients: [application]}).save(function(err) {
-        if(err) console.log(err);
-        res.send('Hey! It looks like it worked.');
-      });
-    });
-  });
-});*/
-
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
   .exec(function(err, program) {
