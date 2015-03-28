@@ -1,10 +1,9 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../plugins/schema-tools.js').requireAll
-  , Entity   = require('./entity.js').Entity
-  , program  = require('./program.js').program;
+  , requireAll = require('../plugins/schema-tools.js').requireAll;
 
 var person = Schema({
+  account: { type: Schema.types.ObjectId, ref: 'Account' },
   name: { first: { type: String,
                    required: true },
           last:  { type: String,
@@ -12,8 +11,6 @@ var person = Schema({
   gender: { type: String,
             required: true }
 });
-
-var Person = Entity.discriminator('Person', person);
 
 module.exports.person = person;
 module.exports.Person = Person;
