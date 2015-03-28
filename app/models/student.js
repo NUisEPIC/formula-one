@@ -1,6 +1,5 @@
 var mongoose = require('mongoose')
-  , Schema   = mongoose.Schema
-  , Person   = require('./person.js').Person;
+  , Schema   = mongoose.Schema;
 
 var student = Schema({
   schoolEmail: String,

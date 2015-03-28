@@ -7,8 +7,8 @@ var mongoose = require('mongoose')
 
 var application = Schema({
   // FUTURE: questions: [question]
-  responses: [response],
-  respondants: [Schema.Types.ObjectId]
+  responses:   [{ type: Schema.types.ObjectId, ref: 'Response' }],
+  respondents: [{ type: Schema.types.ObjectId, ref: 'Person' }]
 });
 
 var Application = FormulaIngredient.discriminator('Application', application);

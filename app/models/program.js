@@ -1,7 +1,6 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../plugins/schema-tools.js').requireAll
-  , ingredient = require('./formula-ingredient.js').ingredient;
+  , requireAll = require('../plugins/schema-tools.js').requireAll;
 
 var program = new Schema({
   name:        { type:    String,
@@ -13,7 +12,7 @@ var program = new Schema({
   description: String,
   dates:       [ { start: Date,
                    end:   Date } ],
-  ingredients: [ ingredient ]
+  ingredients: [ { type: Schema.types.ObjectId, ref: 'Ingredient' } ]
 });
 
 program.virtual('mostRecentYear')
