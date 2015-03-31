@@ -1,8 +1,8 @@
-var Response = require('../models/response.js')
-, sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail;
+var Response = require('./app/models/response.js').Response
+, sendConfirmationEmail = require('./confirmation-mailer.js').sendConfirmationEmail;
 
 function sendUpdateEmails () {
-  Response.find({receivedConfirmationEmail: { $exists: false } }, function(err, reponses) {
+  Response.find({receivedConfirmationEmail: { $exists: false } }, function(err, responses) {
     if (err) console.log(err) && res.send(500, 'Error sending update emails.');
 
     console.log(responses);
@@ -11,7 +11,7 @@ function sendUpdateEmails () {
 
     responses.forEach(function(response) {
       // TEST -- remove before production run
-      if (response.raw.email != 'jtim@u.northwestern.edu') continue;
+      if (response.raw.email == 'jtim@u.northwestern.edu') {
       sendConfirmationEmail({
         user: {
           name: {
@@ -36,6 +36,7 @@ function sendUpdateEmails () {
       }, function(failure) {
         console.log(failure)
       });
+      }
     });
   });
 }
