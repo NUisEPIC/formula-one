@@ -24,7 +24,7 @@ exports.sendConfirmationEmail = function(templateData, success, failure) {
         { "name": "loginLink",
           "content": "http://epic-talent-portal.herokuapp.com/#/login"},
         { "name": "additionalTextContent",
-          "content": "And again, make sure to upload your most recent resume to your account before the Fair!"}
+         "content": "And again, make sure to upload your most recent resume to your account before the Fair! Remember, the Fair is taking place tomorrow, Wednesday, April 1st, from 12-4pm in the Norris Louis Room. In addition, there is a Networking Event from 4-5pm in the Norris Lake Room. Dress is casual. Please bring paper copies of your resume."}
       ],
       "merge_vars": [
         {
