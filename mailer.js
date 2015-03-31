@@ -11,7 +11,6 @@ function sendUpdateEmails () {
 
     responses.forEach(function(response) {
       // TEST -- remove before production run
-      if (response.raw.email == 'jtim@u.northwestern.edu') {
       sendConfirmationEmail({
         user: {
           name: {
@@ -33,7 +32,6 @@ function sendUpdateEmails () {
           console.log('Update sent and field set on ' + response.raw.email);
         });
       }, function(failure) {});
-      }
     });
   });
 }
