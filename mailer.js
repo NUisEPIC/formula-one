@@ -27,15 +27,12 @@ function sendUpdateEmails () {
           alreadyApplied: false
         }
       }, function(success) {
-        console.log(success);
         response.receivedConfirmationEmail = true;
         response.markModified('receivedConfirmationEmail');
         response.save(function() {
           console.log('Update sent and field set on ' + response.raw.email);
         });
-      }, function(failure) {
-        console.log(failure)
-      });
+      }, function(failure) {});
       }
     });
   });
