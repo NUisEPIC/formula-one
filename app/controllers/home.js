@@ -93,41 +93,6 @@ router.post('/:program/application', function(req, res) {
   });
 });
 
-router.post('/:program/:filter/application', function(req, res) {
-  var query = Program.find({shortname: req.params.program});
-
-  req.params.filter.split(',').forEach(function(filterArg) {
-    filterArg = filterArg.split(':');
-    if (filterArg.length > 1 && filterArg.length <= 3) {
-      filterArg.length == 2
-        ? query.where(filterArg[0]).equals(filterArg[1])
-        : query.where(filterArg[0])[filterArg[1]](filterArg[2]);
-    } else {
-      res.send(400, 'Malformed filter');
-    }
-  });
-
-  query.exec(function(err, program) {
-    if (err) console.log(err) && res.send(500, 'Error executing query');
-
-    var application = program.ingredients.filter(function(ingredient) {
-      return !!ingredient.questions
-             && !!ingredient.responses;
-    });
-
-    Application.findOne({ _id: ObjectId(application._id) })
-    .exec(function(err, application) {
-      if(err) console.log(err) && res.send(500, 'Error executing query');
-
-      var newResponse = Response.create({
-        raw: req.post
-      });
-
-      application.responses.push(newResponse);
-    });
-  });
-});
-
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
 
 router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res) {
