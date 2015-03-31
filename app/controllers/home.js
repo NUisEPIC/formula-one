@@ -80,7 +80,14 @@ router.post('/:program/application', function(req, res) {
           loginLink: "http://epic-talent-portal.herokuapp.com/#/login",
           alreadyApplied: false
         }
-      }, function() {}, function() {});
+      }, function(success) {
+        console.log(success);
+        newResponse.receivedConfirmationEmail = true;
+        newResponse.markModified('receivedConfirmationEmail');
+        newResponse.save(function() {
+          console.log('Response received and confirmation email sent for ' + newResponse.raw.email);
+        });
+      }, function() {});
       res.send('Looks successful enough.');
 
       // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email

@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
 
 var response = Schema({
   raw: Schema.Types.Mixed,
-  receivedConfirmationEmail: { type: Boolean, default: true }
+  receivedConfirmationEmail: { type: Boolean }
   // FUTURE: parsed
 });
 
