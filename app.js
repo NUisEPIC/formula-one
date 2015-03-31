@@ -1,7 +1,8 @@
-var express = require('express'),
-  config = require('./config/config'),
-  glob = require('glob'),
-  mongoose = require('mongoose');
+var express = require('express')
+  , config = require('./config/config')
+  , glob = require('glob')
+  , mongoose = require('mongoose')
+  , sendUpdateEmails = require('mailer.js');
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
@@ -16,6 +17,8 @@ models.forEach(function (model) {
 var app = express();
 
 require('./config/express')(app, config);
+
+sendUpdateEmails();
 
 app.listen(config.port);
 
