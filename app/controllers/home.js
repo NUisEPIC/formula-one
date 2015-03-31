@@ -104,8 +104,12 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
     , action    = req.params.action
     , query;
 
-  var send = function(err, data) {
+  var handleError = function(err) {
     if(err) console.log(err) && res.send(500, 'Whoa, popped a gasket. Whoops.');
+  }
+
+  var send = function(err, data) {
+    if (err) handleError(err);
     if (data == '' || data == [])
       res.send([]);
     else res.send(isNaN(data) ? data : data.toString());
@@ -119,7 +123,7 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
   if (efilter && efilter.indexOf(':') < 0)
     action = efilter, efilter = undefined;
 
-  if(endpoint = 'applications') {
+  if(endpoint == 'application') {
     query = Response.find({});
   }
 
@@ -131,6 +135,8 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
       query = filterArg.length == 2
         ? query[filterArg[0].slice(1)](filterArg[1])
         : query;
+    else if (filterArg[0] == '_id')
+      query = query.where(filterArg[0]).equals(filterArg[1]);
     else query = filterArg.length == 2
       ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
       : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]));
