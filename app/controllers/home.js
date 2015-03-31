@@ -6,7 +6,8 @@ var express = require('express')
   , Response = require('../models/response.js').Response
   , Person = require('../models/person.js').Person
   , ObjectId = require('mongoose').Types.ObjectId
-  , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail;
+  , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
+  , _ = require('underscore');
 
 require('dotenv').load();
 
@@ -17,6 +18,26 @@ module.exports = function (app) {
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
 });
+
+router.post('/:program/application/update/:filter', function(req, res) {
+  var query = Response.find({});
+  var filter = req.params.filter;
+  console.log(filter);
+  filter.split(',').forEach(function(filterArg) {
+    filterArg = filterArg.split(':');
+    query = query.where(filterArg[0]).equals(filterArg[1]);
+  });
+  query.exec(function(err, doc) {
+    if(err) console.log(err) && res.send(500, err);
+    doc = doc[0];
+    _.extend(doc, req.body);
+    doc.markModified('raw');
+    doc.save(function(err) {
+      if (err) console.log(err) && res.send(500, 'An error occurred while updating the document.');
+      res.send(doc);
+    });
+  })
+})
 
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
