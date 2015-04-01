@@ -7,7 +7,7 @@ var express = require('express')
   , Person = require('../models/person.js').Person
   , ObjectId = require('mongoose').Types.ObjectId
   , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
-  , sendStartupEmails = require('./mailer').sendStartupEmails
+  , sendStartupEmails = require('../../mailer').sendStartupEmails
   , _ = require('underscore')
   , basicAuth = require('basic-auth-connect');
 
@@ -20,8 +20,9 @@ module.exports = function (app) {
   app.use('/', router);
 };
 
-router.get('/sendStartupEmails', httpAuth, function (req, res) {
+router.get('/sendStartupEmails', emailAuth, function (req, res) {
   sendStartupEmails();
+  res.send('Looks like emails were a-sended.');
 });
 
 router.get('/', function (req, res, next) {
