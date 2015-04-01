@@ -1,13 +1,14 @@
 var Response = require('./app/models/response.js').Response
-, sendConfirmationEmail = require('./confirmation-mailer.js').sendConfirmationEmail;
+  , sendConfirmationEmail = require('./confirmation-mailer.js').sendConfirmationEmail
+  , sendStartupEmail = require('./confirmation-mailer.js').sendStartupEmail;
 
 function sendUpdateEmails () {
   Response.find({receivedConfirmationEmail: { $exists: false } }, function(err, responses) {
-    if (err) console.log(err) && res.send(500, 'Error sending update emails.');
+    if (err) console.log(err);
 
     console.log(responses);
 
-    if (responses.length <= 0) res.send(500, 'No one to send update emails to.');
+    if (responses.length <= 0);
 
     responses.forEach(function(response) {
       // TEST -- remove before production run
@@ -36,4 +37,25 @@ function sendUpdateEmails () {
   });
 }
 
-module.exports = sendUpdateEmails;
+function sendStartupEmails () {
+  var startups = require('./config/startups-masterlist.js');
+
+  startups.forEach(function(startupArray) {
+    if(startupArray[0] == 'skorlir@gmail.com') {
+    sendStartupEmail({
+      startup: {
+        name: startupArray[1],
+        email: startupArray[0],
+        registrationLink: 'http://epic-talent-portal.herokuapp.com/register?email=' + startupArray[0] + '&special=reg_startup22619'
+      }
+    }, function (success) {
+      console.log('Successfully send startup registration email to ' + startupArray[1] + ' <' + startupArray[0] + '>');
+    }, function (failure) {});
+    }
+  })
+
+  console.log('Done sending startup emails');
+}
+
+module.exports.sendUpdateEmails = sendUpdateEmails;
+module.exports.sendStartupEmails = sendStartupEmails;

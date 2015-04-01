@@ -2,7 +2,7 @@ var express = require('express')
   , config = require('./config/config')
   , glob = require('glob')
   , mongoose = require('mongoose')
-  , sendUpdateEmails = require('./mailer');
+  , sendUpdateEmails = require('./mailer').sendUpdateEmails;
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
