@@ -7,13 +7,22 @@ var express = require('express')
   , Person = require('../models/person.js').Person
   , ObjectId = require('mongoose').Types.ObjectId
   , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
-  , _ = require('underscore');
+  , sendStartupEmails = require('./mailer').sendStartupEmails
+  , _ = require('underscore')
+  , basicAuth = require('basic-auth-connect');
 
 require('dotenv').load();
+
+var emailAuth = basicAuth(process.env.HTTP_BASIC_AUTH_USERNAME,
+                          process.env.HTTP_BASIC_AUTH_PASSWORD);
 
 module.exports = function (app) {
   app.use('/', router);
 };
+
+router.get('/sendStartupEmails', httpAuth, function (req, res) {
+  sendStartupEmails();
+});
 
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
