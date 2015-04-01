@@ -8,8 +8,6 @@ function sendUpdateEmails () {
 
     console.log(responses);
 
-    if (responses.length <= 0);
-
     responses.forEach(function(response) {
       // TEST -- remove before production run
       sendConfirmationEmail({
