@@ -7,13 +7,23 @@ var express = require('express')
   , Person = require('../models/person.js').Person
   , ObjectId = require('mongoose').Types.ObjectId
   , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
-  , _ = require('underscore');
+  , sendStartupEmails = require('../../mailer').sendStartupEmails
+  , _ = require('underscore')
+  , basicAuth = require('basic-auth-connect');
 
 require('dotenv').load();
+
+var emailAuth = basicAuth(process.env.HTTP_BASIC_AUTH_USERNAME,
+                          process.env.HTTP_BASIC_AUTH_PASSWORD);
 
 module.exports = function (app) {
   app.use('/', router);
 };
+
+router.get('/sendStartupEmails', emailAuth, function (req, res) {
+  sendStartupEmails();
+  res.send('Looks like emails were a-sended.');
+});
 
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
@@ -64,31 +74,33 @@ router.post('/:program/application', function(req, res) {
     Response.create({
       raw: req.body
     }, function(err, newResponse) {
-      console.log(newResponse);
-      Application.findOneAndUpdate({ _id: ObjectId(application._id) }
-                                  ,{$push: {responses: newResponse}})
-      .exec(function(err, application) {
-        if(err) console.log(err) && res.send(500, 'Error executing query');
-        sendConfirmationEmail({
-          user: {
-            name: {
-              first: req.body.name.first,
-              last: req.body.name.last,
-              full: req.body.name.first + " " + req.body.name.last
-            },
-            email: req.body.email,
-            hasAccount: false
+      var responseId = newResponse._id;
+      if(err) console.log(err) && res.send(500, 'Error executing query');
+      sendConfirmationEmail({
+        user: {
+          name: {
+            first: req.body.name.first,
+            last: req.body.name.last,
+            full: req.body.name.first + " " + req.body.name.last
           },
-          account: {
-            setupLink: "#",
-            resetLink: "#",
-            loginLink: "http://epic-talent-portal.herokuapp.com/#/login"
-          }
-        }, function() {}, function() {});
-        res.send('Looks successful enough.');
+          email: req.body.email
+        },
+        account: {
+          setupLink: "http://epic-talent-portal.herokuapp.com/register?email=" + req.body.email + "&id=" + responseId,
+          loginLink: "http://epic-talent-portal.herokuapp.com/#/login",
+          alreadyApplied: false
+        }
+      }, function(success) {
+        console.log(success);
+        newResponse.receivedConfirmationEmail = true;
+        newResponse.markModified('receivedConfirmationEmail');
+        newResponse.save(function() {
+          console.log('Response received and confirmation email sent for ' + newResponse.raw.email);
+        });
+      }, function() {});
+      res.send('Looks successful enough.');
 
-        // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email
-      });
+      // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email
     });
   });
 });
