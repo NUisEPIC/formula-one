@@ -39,7 +39,6 @@ function sendStartupEmails () {
   var startups = require('./config/startups-masterlist.js');
 
   startups.forEach(function(startupArray) {
-    if(startupArray[0] == 'skorlir@gmail.com') {
     sendStartupEmail({
       startup: {
         name: startupArray[1],
@@ -49,7 +48,6 @@ function sendStartupEmails () {
     }, function (success) {
       console.log('Successfully send startup registration email to ' + startupArray[1] + ' <' + startupArray[0] + '>');
     }, function (failure) {});
-    }
   })
 
   console.log('Done sending startup emails');
