@@ -8,9 +8,12 @@ var person = Schema({
                    required: true },
           last:  { type: String,
                    required: true } },
-  gender: { type: String,
-            required: true }
+  email:   { type: String, required: true },
+  gender:  { type: String },
+  hearsay: { type: String }
 });
+
+var Person = mongoose.model('Person', person);
 
 module.exports.person = person;
 module.exports.Person = Person;

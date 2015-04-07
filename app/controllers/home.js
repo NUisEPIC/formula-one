@@ -29,6 +29,28 @@ router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
 });
 
+router.post('/:program/signup', function(req, res) {
+  Program.findOne({ shortname: req.params.program })
+  .exec(function(err, program) {
+    if(err) console.log(err) && res.send(500, 'Error querying for program');
+
+    console.log(program);
+    console.log(req.body);
+
+    Person.create({
+      name: {
+              first: req.body.name.split(' ')[0],
+              last: req.body.name.split(' ')[1]
+            },
+      email: req.body.email,
+      hearsay: req.body.hearsay
+    },function (err, person) {
+      if (err) console.log(err) && res.send(500, 'Couldn\'t create a Person');
+      console.log('Person created: ' + person);
+    });
+  });
+});
+
 router.post('/:program/application/update/:filter', function(req, res) {
   var query = Response.find({});
   var filter = req.params.filter;
