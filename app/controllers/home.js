@@ -78,40 +78,17 @@ router.post('/:program/application', function(req, res) {
 
     console.log(program);
 
-    var application = [].filter.call(program.ingredients, function(ingredient) {
-      return !!ingredient.questions
-             && !!ingredient.responses;
-    })[0];
-
     console.log(req.body);
 
-    Person.create({
-      name: { first: req.body.name.first, last: req.body.name.last },
-      gender: req.body.gender
-    }, function(err, person) {
-      if(err) console.log(err);
-      else console.log("Person " + person.name.first + " " + person.name.last + " successfully created.");
-    });
-
     Response.create({
+      for: 'EPIC Spring Recruitment 2015',
       raw: req.body
     }, function(err, newResponse) {
       var responseId = newResponse._id;
       if(err) console.log(err) && res.send(500, 'Error executing query');
       sendConfirmationEmail({
-        user: {
-          name: {
-            first: req.body.name.first,
-            last: req.body.name.last,
-            full: req.body.name.first + " " + req.body.name.last
-          },
-          email: req.body.email
-        },
-        account: {
-          setupLink: "http://epic-talent-portal.herokuapp.com/register?email=" + req.body.email + "&id=" + responseId,
-          loginLink: "http://epic-talent-portal.herokuapp.com/#/login",
-          alreadyApplied: false
-        }
+        name: req.body.name,
+        email: req.body.email
       }, function(success) {
         console.log(success);
         newResponse.receivedConfirmationEmail = true;
