@@ -74,16 +74,6 @@ router.post('/:program/application/update/:filter', function(req, res) {
   })
 })
 
-router.get('/:program/application/list', reviewAuth, function (req, res) {
-
-  Response.find({
-    for: 'EPIC Spring Recruitment 2015'
-  }, function (err, apps) {
-    if (err) console.log(err) && res.send(500, 'Could not find apps');
-    res.render('list', {applications: apps, path: req.path.slice(0,-5)});
-  });
-});
-
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
   .exec(function(err, program) {
@@ -174,6 +164,12 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
 
       res.render('view', {app: data[0]})
     })
+  } else if (action == 'list') {
+    query.where({for: 'EPIC Spring Recruitment 2015'}).exec( function (err, data) {
+       if (err) handleError(err);
+
+       res.render('list', {applications: data, path: req.path.slice(0, -5)});
+     })
   } else {
     query.exec(send);
   }
