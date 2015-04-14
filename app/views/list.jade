@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  ul
+    each app in applications
+      li
+        a(href='#{path}/_id:#{app._id}/view')
+          = app.raw.name

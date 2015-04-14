@@ -1,0 +1,19 @@
+doctype html
+html
+  head
+    link(href='/css/view.css', rel='stylesheet')
+    script(src="http://use.edgefonts.net/lato:n9,i4,n1,i7,i9,n7,i1,i3,n4,n3:all.js")
+
+  body
+    h1= app.raw.name
+    a(href='mailto:#{app.raw.email}')= app.raw.email
+
+    dl
+      each answer, question in app.raw
+        dt= question
+        if (question == 'resume')
+          dd
+            - var resumeobj = JSON.parse(answer);
+            a(href='#{resumeobj.url}')= resumeobj.filename
+        else
+          dd= answer
