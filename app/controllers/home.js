@@ -16,6 +16,9 @@ require('dotenv').load();
 var emailAuth = basicAuth(process.env.HTTP_BASIC_AUTH_USERNAME,
                           process.env.HTTP_BASIC_AUTH_PASSWORD);
 
+var reviewAuth = basicAuth(process.env.APP_REVIEW_AUTH_USERNAME,
+                           process.env.APP_REVIEW_AUTH_PASSWORD);
+
 module.exports = function (app) {
   app.use('/', router);
 };
@@ -71,6 +74,16 @@ router.post('/:program/application/update/:filter', function(req, res) {
   })
 })
 
+router.get('/:program/application/list', reviewAuth, function (req, res) {
+
+  Response.find({
+    for: 'EPIC Spring Recruitment 2015'
+  }, function (err, apps) {
+    if (err) console.log(err) && res.send(500, 'Could not find apps');
+    res.render('list', {applications: apps, path: req.path.slice(0,-5)});
+  });
+});
+
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
   .exec(function(err, program) {
@@ -106,7 +119,7 @@ router.post('/:program/application', function(req, res) {
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
 
-router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res) {
+router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
   var program   = req.params.program
     , pfilter   = req.params.pfilter
@@ -155,6 +168,12 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
 
   if (action == 'count') {
     query.count(send);
+  } else if (action == 'view') {
+    query.exec( function (err, data) {
+      if (err) handleError(err);
+
+      res.render('view', {app: data[0]})
+    })
   } else {
     query.exec(send);
   }
