@@ -109,7 +109,7 @@ router.post('/:program/application', function(req, res) {
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
 
-router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res) {
+router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?',  function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
   var program   = req.params.program
     , pfilter   = req.params.pfilter
@@ -139,6 +139,10 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
 
   if(endpoint == 'application') {
     query = Response.find({});
+  }
+
+  if(program == 'scf') {
+    query = Response.find({ for: { $exists: false } });
   }
 
   // TODO(jordan): same for pfilter...
