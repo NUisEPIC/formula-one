@@ -23,35 +23,8 @@ module.exports = function (app) {
   app.use('/', router);
 };
 
-router.get('/sendStartupEmails', emailAuth, function (req, res) {
-  sendStartupEmails();
-  res.send('Looks like emails were a-sended.');
-});
-
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
-});
-
-router.post('/:program/signup', function(req, res) {
-  Program.findOne({ shortname: req.params.program })
-  .exec(function(err, program) {
-    if(err) console.log(err) && res.send(500, 'Error querying for program');
-
-    console.log(program);
-    console.log(req.body);
-
-    Person.create({
-      name: {
-              first: req.body.name.split(' ')[0],
-              last: req.body.name.split(' ')[1]
-            },
-      email: req.body.email,
-      hearsay: req.body.hearsay
-    },function (err, person) {
-      if (err) console.log(err) && res.send(500, 'Couldn\'t create a Person');
-      console.log('Person created: ' + person);
-    });
-  });
 });
 
 router.post('/:program/application/update/:filter', function(req, res) {
@@ -77,7 +50,7 @@ router.post('/:program/application/update/:filter', function(req, res) {
 router.get('/:program/application/list', reviewAuth, function (req, res) {
 
   Response.find({
-    for: 'EPIC Spring Recruitment 2015'
+    for: 'EPIC Fall Recruitment 2015'
   }, function (err, apps) {
     if (err) console.log(err) && res.send(500, 'Could not find apps');
     res.render('list', {applications: apps, path: req.path.slice(0,-5)});
@@ -94,7 +67,7 @@ router.post('/:program/application', function(req, res) {
     console.log(req.body);
 
     Response.create({
-      for: 'EPIC Spring Recruitment 2015',
+      for: 'EPIC Fall Recruitment 2015',
       raw: req.body
     }, function(err, newResponse) {
       var responseId = newResponse._id;
