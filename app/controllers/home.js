@@ -2,56 +2,21 @@ var express = require('express')
   , router = express.Router()
   , mongoose = require('mongoose')
   , Program = require('../models/program.js').Program
-  , Application = require('../models/application.js')
+  , Application = require('../models/application.js').Application
   , Response = require('../models/response.js').Response
   , Person = require('../models/person.js').Person
   , ObjectId = require('mongoose').Types.ObjectId
-  , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
-  , sendStartupEmails = require('../../mailer').sendStartupEmails
   , _ = require('underscore')
-  , basicAuth = require('basic-auth-connect');
+  , basicAuth = require('basic-auth-connect')
 
 require('dotenv').load();
-
-var emailAuth = basicAuth(process.env.HTTP_BASIC_AUTH_USERNAME,
-                          process.env.HTTP_BASIC_AUTH_PASSWORD);
-
-var reviewAuth = basicAuth(process.env.APP_REVIEW_AUTH_USERNAME,
-                           process.env.APP_REVIEW_AUTH_PASSWORD);
 
 module.exports = function (app) {
   app.use('/', router);
 };
 
-router.get('/sendStartupEmails', emailAuth, function (req, res) {
-  sendStartupEmails();
-  res.send('Looks like emails were a-sended.');
-});
-
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
-});
-
-router.post('/:program/signup', function(req, res) {
-  Program.findOne({ shortname: req.params.program })
-  .exec(function(err, program) {
-    if(err) console.log(err) && res.send(500, 'Error querying for program');
-
-    console.log(program);
-    console.log(req.body);
-
-    Person.create({
-      name: {
-              first: req.body.name.split(' ')[0],
-              last: req.body.name.split(' ')[1]
-            },
-      email: req.body.email,
-      hearsay: req.body.hearsay
-    },function (err, person) {
-      if (err) console.log(err) && res.send(500, 'Couldn\'t create a Person');
-      console.log('Person created: ' + person);
-    });
-  });
 });
 
 router.post('/:program/application/update/:filter', function(req, res) {
@@ -68,43 +33,30 @@ router.post('/:program/application/update/:filter', function(req, res) {
     _.extend(doc, req.body);
     doc.markModified('raw');
     doc.save(function(err) {
-      if (err) console.log(err) && res.send(500, 'An error occurred while updating the document.');
+      if (err) {
+        console.log(err);
+        res.send(500, 'An error occurred while updating the document.');
+      }
       res.send(doc);
     });
   })
 })
 
-router.post('/:program/application', function(req, res) {
-  Program.findOne({ shortname: req.params.program })
-  .exec(function(err, program) {
-    if (err) console.log(err) && res.send(500, 'Error executing query');
+router.post('/:program/new', function (req, res) {
+  var program = req.params.program
+    , data    = req.body
 
-    console.log(program);
+  var handleError = function(err) {
+    if(err) {
+      console.log(err)
+      res.send(500, 'Whoa, popped a gasket. Whoops.')
+    }
+  }
 
-    console.log(req.body);
-
-    Response.create({
-      for: 'EPIC Spring Recruitment 2015',
-      raw: req.body
-    }, function(err, newResponse) {
-      var responseId = newResponse._id;
-      if(err) console.log(err) && res.send(500, 'Error executing query');
-      sendConfirmationEmail({
-        name: req.body.name,
-        email: req.body.email
-      }, function(success) {
-        console.log(success);
-        newResponse.receivedConfirmationEmail = true;
-        newResponse.markModified('receivedConfirmationEmail');
-        newResponse.save(function() {
-          console.log('Response received and confirmation email sent for ' + newResponse.raw.email);
-        });
-      }, function() {});
-      res.send('Looks successful enough.');
-
-      // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email
-    });
-  });
+  Program.create(data, function (err, p) {
+    handleError(err);
+    res.status(200).send();
+  })
 });
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
@@ -119,13 +71,20 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?',  function(req, re
     , query;
 
   var handleError = function(err) {
-    if(err) console.log(err) && res.send(500, 'Whoa, popped a gasket. Whoops.');
+    if(err) {
+      console.log(err)
+      res.status(500).send('Whoa, popped a gasket. Whoops.')
+    }
   }
 
   var send = function(err, data) {
-    if (err) handleError(err);
+    handleError(err);
     if (data == '' || data == [])
       res.send([]);
+    // NOTE(jordan): if data is a Number, then call toString
+    else if (data == null) {
+      res.send(null)
+    }
     else res.send(isNaN(data) ? data : data.toString());
   }
 
@@ -133,17 +92,19 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?',  function(req, re
   var rxsi = function (val) { return new RegExp('^' + val, 'i'); }
 
   if (pfilter && pfilter.indexOf(':') < 0)
-    action = efilter, efilter = endpoint, endpoint = pfilter, pfilter = undefined;
+    action = efilter,
+      efilter = endpoint,
+      endpoint = pfilter,
+      pfilter = undefined;
+
   if (efilter && efilter.indexOf(':') < 0)
-    action = efilter, efilter = undefined;
+    action = efilter,
+      efilter = undefined;
 
-  if(endpoint == 'application') {
-    query = Response.find({});
-  }
-
-  if(program == 'scf') {
-    query = Response.find({ for: { $exists: false } });
-  }
+  var query = Program.findOne({ $or: [
+    { 'name':      program },
+    { 'shortname': program }
+  ]})
 
   // TODO(jordan): same for pfilter...
 
@@ -169,10 +130,13 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?',  function(req, re
       res.render('view', {app: data[0]})
     })
   } else if (action == 'list') {
-    query.where({for: 'EPIC Spring Recruitment 2015'}).exec( function (err, data) {
-       if (err) handleError(err);
-
-       res.render('list', {applications: data, path: req.path.slice(0, -5)});
+    query
+      .exec(function (err, data) {
+        if (err) handleError(err);
+        res.render('list', {
+          applications: data,
+          path: req.path.slice(0, -5)
+        });
      })
   } else {
     query.exec(send);

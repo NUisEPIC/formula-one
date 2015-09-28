@@ -1,16 +1,28 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../plugins/schema-tools.js').requireAll;
+  , requireAll = require('../lib/schema-tools.js').requireAll
 
 var person = Schema({
-  account: { type: Schema.types.ObjectId, ref: 'Account' },
-  name: { first: { type: String,
-                   required: true },
-          last:  { type: String,
-                   required: true } },
-  email:   { type: String, required: true },
-  gender:  { type: String },
-  hearsay: { type: String }
+  name:    {
+    first: {
+      type: String,
+      required: true
+    },
+    last:  {
+      type: String,
+      required: true
+    }
+  },
+  email:   {
+    type: String,
+    required: true
+  },
+  gender:  {
+    type: String
+  },
+  hearsay: {
+    type: String
+  }
 });
 
 var Person = mongoose.model('Person', person);
