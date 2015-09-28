@@ -6,7 +6,7 @@ exports.sendConfirmationEmail = function(templateData, success, failure) {
     "template_name": "EPIC Recruitment Application Response",
     "template_content" : {}, // there are no mc:edit fields
     "message": {
-      "subject": "Thanks for apply for EPIC, " + templateData.name + "!",
+      "subject": "Thanks for applying for EPIC, " + templateData.name + "!",
       "to": [{ "email": templateData.email,
                 "name": templateData.name
              }],
