@@ -30,7 +30,6 @@ router.get('/', function (req, res, next) {
 router.post('/:program/application/update/:filter', function(req, res) {
   var query = Response.find({});
   var filter = req.params.filter;
-  console.log(filter);
   filter.split(',').forEach(function(filterArg) {
     filterArg = filterArg.split(':');
     query = query.where(filterArg[0]).equals(filterArg[1]);
