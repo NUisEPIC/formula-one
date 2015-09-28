@@ -18,7 +18,5 @@ var app = express();
 
 require('./config/express')(app, config);
 
-sendUpdateEmails();
-
 app.listen(config.port);
 
