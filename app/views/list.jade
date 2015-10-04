@@ -1,8 +1,69 @@
 extends layout
 
+
 block content
+  style.
+    li {
+      list-style-type: none;
+    }
+    .block {
+      display: block;
+      float: left;
+      width: 250px;
+      padding: 15px;
+      height: 175px;
+    }
+    .block:nth-of-type(even) {
+      background: rgba(0,0,0,0.05);
+    }
+    .block:nth-of-type(odd) {
+      background: rgba(0,0,0,0.02);
+    }
+    p {
+      text-decoration: underline;
+    }
+    a {
+      display: block;
+      width: 600px;
+      padding: 10px;
+    }
+    dd {
+      font-weight: bold;
+    }
   ul
     each app in applications
       li
         a(href='#{path}/_id:#{app._id}/view')
           = app.raw.name
+        .block
+          dt Applying to EPIC Teams
+          dd
+            = app.raw['apply-for-epic'] || 'no'
+          dt Applying to Participate in Launch
+          dd
+            = app.raw['participate-in-launch'] || app.raw['apply-for-launch'] || 'no'
+        .block
+          p I want to
+          dt Build a Startup
+          dd
+            = app.raw['build-a-startup'] || 'no'
+          dt Run a Hackaton
+          dd
+            = app.raw['run-a-hackathon'] || 'no'
+          dt Learn to Code
+          dd
+            = app.raw['learn-to-code'] || 'no'
+          dt Teach Entrepreneurship
+          dd
+            = app.raw['teach-entrepreneurship'] || 'no'
+        .block
+          p I am a
+          dt Designer
+          dd
+            = app.raw['designer'] || 'no'
+          dt Hacker
+          dd
+            = app.raw['hacker'] || 'no'
+          dt Builder
+          dd
+            = app.raw['builder'] || 'no'
