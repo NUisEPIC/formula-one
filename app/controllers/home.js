@@ -133,9 +133,13 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
         : query;
     else if (filterArg[0] == '_id')
       query = query.where(filterArg[0]).equals(filterArg[1]);
-    else query = filterArg.length == 2
-      ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
-      : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]));
+    else if(filterArg.length == 2) {
+      if (filterArg[1] == 'true') filterArg[1] = true
+      query = query.where(filterArg[0]).equals(filterArg[1])
+    } else {
+      if (filterArg[2] == 'true') filterArg[2] = true
+      query = query.where(filterArg[0])[filterArg[1]](filterArg[2])
+    }
   })
 
   if (action == 'count') {
@@ -146,7 +150,13 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
 
       res.render('view', {app: data[0]})
     })
-  } else {
+  } else if (action == 'list') {
+    query.exec( function (err, data) {
+      if (err) handleError(err);
+
+      res.render('list', { applications: data })
+    });
+  }else {
     query.exec(send);
   }
 })
