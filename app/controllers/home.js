@@ -127,18 +127,17 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
 
   efilter && efilter.split(',').forEach(function(filterArg) {
     filterArg = filterArg.split(':');
-    if (filterArg[0].charAt(0) == '~')
-      query = filterArg.length == 2
-        ? query[filterArg[0].slice(1)](filterArg[1])
-        : query;
-    else if (filterArg[0] == '_id')
-      query = query.where(filterArg[0]).equals(filterArg[1]);
-    else if(filterArg.length == 2) {
-      if (filterArg[1] == 'true') filterArg[1] = true
-      query = query.where(filterArg[0]).equals(filterArg[1])
-    } else {
-      if (filterArg[2] == 'true') filterArg[2] = true
-      query = query.where(filterArg[0])[filterArg[1]](filterArg[2])
+    var f = filterArg.shift()
+    var v = filterArg.join(':')
+    console.log(f, v);
+    if (f.charAt(0) == '~')
+      query = query[f.slice(1)](v)
+    else if (f == '_id')
+      query = query.where(f).equals(v);
+    else {
+      if (v == 'true') v = true
+      else v = rxsi(v)
+      query = query.where(f).equals(v)
     }
   })
 
