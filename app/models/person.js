@@ -15,12 +15,13 @@ var person = Schema({
   },
   email:   {
     type: String,
-    required: true
+    required: true,
+    index: {
+      unique: true,
+      dropDups: true
+    }
   },
   gender:  {
-    type: String
-  },
-  hearsay: {
     type: String
   }
 });

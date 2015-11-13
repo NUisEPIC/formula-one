@@ -1,6 +1,5 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../lib/schema-tools.js').requireAll
 
 var program = new Schema({
   name: {
@@ -8,19 +7,20 @@ var program = new Schema({
     index:   {
       unique:   true,
       dropDups: true
-    }
+    },
+    required: true
   },
   shortname: {
     type: String,
     index: {
       unique:   true,
       dropDups: true
-    }
+    },
+    required: true
   },
-  description: String
+  description: String,
+  year: Number
 });
-
-requireAll(program);
 
 module.exports.program = program;
 module.exports.Program = mongoose.model('Program', program);

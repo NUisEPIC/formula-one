@@ -5,6 +5,10 @@ var application = Schema({
   responses: [ {
     type: Schema.Types.ObjectId,
     ref:  'Response'
+  } ],
+  questions: [ {
+    type: Schema.Types.ObjectId,
+    ref: 'Question'
   } ]
 });
 

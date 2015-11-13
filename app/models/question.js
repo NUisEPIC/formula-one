@@ -2,8 +2,15 @@ var mongoose = require('mongoose')
   , Schema = mongoose.Schema
 
 var question = Schema({
-  text: String
-  // FUTURE: type, format, input_id, validator
+  text: String,
+  type: {
+    type: Schema.Types.ObjectId,
+    ref : 'Ingredient'
+  },
+  ingredients: [ {
+    type: Schema.Types.ObjectId,
+    ref : 'Ingredient'
+  } ]
 });
 
 module.exports.question = question;
