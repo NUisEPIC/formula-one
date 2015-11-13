@@ -5,7 +5,6 @@ var express = require('express')
   , Application = require('../models/application.js').Application
   , Response = require('../models/response.js').Response
   , Person = require('../models/person.js').Person
-  , ObjectId = require('mongoose').Types.ObjectId
   , _ = require('underscore')
   , basicAuth = require('basic-auth-connect')
 
@@ -42,33 +41,42 @@ router.post('/:program/application/update/:filter', function(req, res) {
   })
 })
 
-router.post('/:program/new', function (req, res) {
-  var program = req.params.program
+router.post('/:subject', function (req, res) {
+  var subject = req.params.subject
     , data    = req.body
+    , model
 
   var handleError = function(err) {
     if(err) {
       console.log(err)
-      res.send(500, 'Whoa, popped a gasket. Whoops.')
+      res.send(500, 'Whoa, popped a gasket. Whoops.' + '\n\n' + err.errmsg)
     }
   }
 
-  Program.create(data, function (err, p) {
+  model = subject.toLowerCase() == 'person' ? Person : Program
+
+  if (model === Program)
+    data.name = (data.name || subject).toLowerCase()
+
+  model.create(data, function (err, p) {
+    console.log(p)
     handleError(err);
     res.status(200).send();
   })
 });
 
-// NOTE(jordan): LET'S BUILD TEH SUPERROUTE
-
-router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?',  function(req, res) {
-  // NOTE(jordan): so many optional parameters!!!
-  var program   = req.params.program
+router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, res) {
+  var subject   = req.params.subject
     , pfilter   = req.params.pfilter
     , endpoint  = req.params.endpoint
     , efilter   = req.params.efilter
     , action    = req.params.action
-    , query;
+    , query
+
+  var endpoints = {
+    application: Application,
+    response: Response
+  }
 
   var handleError = function(err) {
     if(err) {
