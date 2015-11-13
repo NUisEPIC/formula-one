@@ -86,67 +86,88 @@ router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, r
   }
 
   var send = function(err, data) {
-    handleError(err);
+    handleError(err)
     if (data == '' || data == [])
-      res.send([]);
+      res.send([])
     // NOTE(jordan): if data is a Number, then call toString
     else if (data == null) {
       res.send(null)
     }
-    else res.send(isNaN(data) ? data : data.toString());
+    else res.send(isNaN(data) ? data : data.toString())
   }
 
   // NOTE(jordan): all queries should be 'startsWith' and case insensitive
-  var rxsi = function (val) { return new RegExp('^' + val, 'i'); }
+  var rxsi = function (val) { return new RegExp('^' + val, 'i') }
 
-  if (pfilter && pfilter.indexOf(':') < 0)
-    action = efilter,
-      efilter = endpoint,
-      endpoint = pfilter,
-      pfilter = undefined;
+  if (subject.toLowerCase() == 'person' && (query = Person.find()))
+    if (pfilter && pfilter.indexOf(':') < 0)
+      action = pfilter,
+        efilter = endpoint = pfilter = undefined
+    else
+      action = endpoint,
+        efilter = endpoint = undefined
 
-  if (efilter && efilter.indexOf(':') < 0)
-    action = efilter,
-      efilter = undefined;
+  else
+    if (pfilter && pfilter.indexOf(':') < 0)
+      if (!action && !efilter)
+        action = pfilter,
+          efilter = endpoint = pfilter = undefined
+      else
+        action = efilter,
+          efilter = endpoint,
+          endpoint = pfilter,
+          pfilter = undefined
 
-  var query = Program.findOne({ $or: [
-    { 'name':      program },
-    { 'shortname': program }
-  ]})
+    if (efilter && efilter.indexOf(':') < 0)
+      action = efilter,
+        efilter = undefined
 
-  // TODO(jordan): same for pfilter...
+  if (!endpoint) {
+    if (!query)
+      query = Program.find({ $or: [
+        { 'name':      rxsi(subject) },
+        { 'shortname': rxsi(subject) }
+      ]})
 
-  efilter && efilter.split(',').forEach(function(filterArg) {
-    filterArg = filterArg.split(':');
-    if (filterArg[0].charAt(0) == '~')
-      query = filterArg.length == 2
-        ? query[filterArg[0].slice(1)](filterArg[1])
-        : query;
-    else if (filterArg[0] == '_id')
-      query = query.where(filterArg[0]).equals(filterArg[1]);
-    else query = filterArg.length == 2
-      ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
-      : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]));
-  })
+    pfilter && pfilter.split(',').forEach(function(filterArg) {
+      filterArg = filterArg.split(':');
+      if (filterArg[0].charAt(0) == '~')
+        query = filterArg.length == 2
+          ? query[filterArg[0].slice(1)](filterArg[1])
+          : query;
+      else if (filterArg[0] == '_id')
+        query = query.where(filterArg[0]).equals(filterArg[1])
+      else query = filterArg.length == 2
+        ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
+        : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]))
+    })
+  }
+  else {
+    query = endpoints[endpoint].find()
+
+    efilter && efilter.split(',').forEach(function(filterArg) {
+      filterArg = filterArg.split(':');
+      if (filterArg[0].charAt(0) == '~')
+        query = filterArg.length == 2
+          ? query[filterArg[0].slice(1)](filterArg[1])
+          : query;
+      else if (filterArg[0] == '_id')
+        query = query.where(filterArg[0]).equals(filterArg[1])
+      else query = filterArg.length == 2
+        ? query.where(filterArg[0]).equals(rxsi(filterArg[1]))
+        : query.where(filterArg[0])[filterArg[1]](rxsi(filterArg[2]))
+    })
+  }
+
+  if (!(query.options.limit && query.options.limit < 100)) {
+    query.limit(20)
+  }
 
   if (action == 'count') {
-    query.count(send);
-  } else if (action == 'view') {
-    query.exec( function (err, data) {
-      if (err) handleError(err);
-
-      res.render('view', {app: data[0]})
-    })
-  } else if (action == 'list') {
-    query
-      .exec(function (err, data) {
-        if (err) handleError(err);
-        res.render('list', {
-          applications: data,
-          path: req.path.slice(0, -5)
-        });
-     })
+    query.count(send)
+  } else if (action) {
+    res.status(400).send('Requested action was not valid.')
   } else {
-    query.exec(send);
+    query.exec(send)
   }
 })
