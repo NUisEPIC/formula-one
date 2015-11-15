@@ -24,7 +24,7 @@ exports.sendConfirmationEmail = function(templateData, success, failure) {
           ]
         }
       ],
-      "google_analytics_domains": ["nuisepic.com"],
+      "google_analytics_domains": [ "nuisepic.com" ],
 
     },
     "async": true,

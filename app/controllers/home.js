@@ -8,36 +8,36 @@ var express = require('express')
   , _ = require('underscore')
   , basicAuth = require('basic-auth-connect')
 
-require('dotenv').load();
+require('dotenv').load()
 
 module.exports = function (app) {
-  app.use('/', router);
-};
+  app.use('/', router)
+}
 
 router.get('/', function (req, res, next) {
-  res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
-});
+  res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?')
+})
 
 router.post('/:program/application/update/:filter', function(req, res) {
-  var query = Response.find({});
-  var filter = req.params.filter;
-  console.log(filter);
+  var query = Response.find({})
+  var filter = req.params.filter
+  console.log(filter)
   filter.split(',').forEach(function(filterArg) {
-    filterArg = filterArg.split(':');
-    query = query.where(filterArg[0]).equals(filterArg[1]);
-  });
+    filterArg = filterArg.split(':')
+    query = query.where(filterArg[0]).equals(filterArg[1])
+  })
   query.exec(function(err, doc) {
-    if(err) console.log(err) && res.send(500, err);
-    doc = doc[0];
-    _.extend(doc, req.body);
-    doc.markModified('raw');
+    if(err) console.log(err) && res.send(500, err)
+    doc = doc[0]
+    _.extend(doc, req.body)
+    doc.markModified('raw')
     doc.save(function(err) {
       if (err) {
-        console.log(err);
-        res.send(500, 'An error occurred while updating the document.');
+        console.log(err)
+        res.send(500, 'An error occurred while updating the document.')
       }
-      res.send(doc);
-    });
+      res.send(doc)
+    })
   })
 })
 
@@ -60,10 +60,10 @@ router.post('/:subject', function (req, res) {
 
   model.create(data, function (err, p) {
     console.log(p)
-    handleError(err);
-    res.status(200).send();
+    handleError(err)
+    res.status(200).send()
   })
-});
+})
 
 router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, res) {
   var subject   = req.params.subject
@@ -130,11 +130,11 @@ router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, r
       ]})
 
     pfilter && pfilter.split(',').forEach(function(filterArg) {
-      filterArg = filterArg.split(':');
+      filterArg = filterArg.split(':')
       if (filterArg[0].charAt(0) == '~')
         query = filterArg.length == 2
           ? query[filterArg[0].slice(1)](filterArg[1])
-          : query;
+          : query
       else if (filterArg[0] == '_id')
         query = query.where(filterArg[0]).equals(filterArg[1])
       else query = filterArg.length == 2
@@ -146,11 +146,11 @@ router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, r
     query = endpoints[endpoint].find()
 
     efilter && efilter.split(',').forEach(function(filterArg) {
-      filterArg = filterArg.split(':');
+      filterArg = filterArg.split(':')
       if (filterArg[0].charAt(0) == '~')
         query = filterArg.length == 2
           ? query[filterArg[0].slice(1)](filterArg[1])
-          : query;
+          : query
       else if (filterArg[0] == '_id')
         query = query.where(filterArg[0]).equals(filterArg[1])
       else query = filterArg.length == 2
