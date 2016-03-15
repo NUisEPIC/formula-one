@@ -1,6 +1,5 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , requireAll = require('../lib/schema-tools.js').requireAll
 
 var person = Schema({
   name:    {
