@@ -91,10 +91,9 @@ router.post('/:program/application', function(req, res) {
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
 
-router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
+router.get('/:program/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
   var program   = req.params.program
-    , pfilter   = req.params.pfilter
     , endpoint  = req.params.endpoint
     , efilter   = req.params.efilter
     , action    = req.params.action
@@ -114,8 +113,6 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
   // NOTE(jordan): all queries should be 'startsWith' and case insensitive
   var rxsi = function (val) { return new RegExp('^' + val, 'i'); }
 
-  if (pfilter && pfilter.indexOf(':') < 0)
-    action = efilter, efilter = endpoint, endpoint = pfilter, pfilter = undefined;
   if (efilter && efilter.indexOf(':') < 0)
     action = efilter, efilter = undefined;
 
@@ -141,7 +138,6 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
     }
   })
 
-  console.log(pfilter)
   console.log(efilter)
 
   if (action == 'count') {
