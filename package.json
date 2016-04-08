@@ -17,13 +17,15 @@
     "mandrill": "^0.1.0",
     "mandrill-api": "^1.0.41",
     "method-override": "~2.3.0",
-    "mongoose": "^4.2.5",
+    "mongoose": "~3.8.20",
     "morgan": "~1.5.0",
     "serve-favicon": "~2.2.0",
     "underscore": "^1.7.0"
   },
   "devDependencies": {
-    "gulp-livereload": "^3.8.1",
-    "gulp-sass": "^2.1.0"
+    "gulp": "~3.8.10",
+    "gulp-livereload": "~3.4.0",
+    "gulp-nodemon": "~1.0.4",
+    "gulp-sass": "^2.0.4"
   }
 }

@@ -6,7 +6,7 @@ exports.sendConfirmationEmail = function(templateData, success, failure) {
     "template_name": "EPIC Recruitment Application Response",
     "template_content" : {}, // there are no mc:edit fields
     "message": {
-      "subject": "Thanks for apply for EPIC, " + templateData.name + "!",
+      "subject": "Thanks for applying to EPIC, " + templateData.name + "!",
       "to": [{ "email": templateData.email,
                 "name": templateData.name
              }],
@@ -21,10 +21,12 @@ exports.sendConfirmationEmail = function(templateData, success, failure) {
           "vars": [
             { "name": "name",
               "content": templateData.name},
+            { "name": "epicTeam",
+              "content": templateData.applyingFor === 'EPIC Teams'}
           ]
         }
       ],
-      "google_analytics_domains": [ "nuisepic.com" ],
+      "google_analytics_domains": ["nuisepic.com"],
 
     },
     "async": true,
@@ -81,4 +83,3 @@ exports.sendStartupEmail = function(templateData, success, failure) {
       if(typeof(failure) == 'function') failure(error);
   });
 }
-
