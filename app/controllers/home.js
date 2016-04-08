@@ -141,6 +141,9 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
     }
   })
 
+  console.log(pfilter)
+  console.log(efilter)
+
   if (action == 'count') {
     query.count(send);
   } else if (action == 'view') {
