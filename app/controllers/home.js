@@ -163,6 +163,9 @@ router.get('/:subject/:pfilter?/:endpoint?/:efilter?/:action?',  function(req, r
     query.limit(20)
   }
 
+  console.log(pfilter)
+  console.log(efilter)
+
   if (action == 'count') {
     query.count(send)
   } else if (action) {
