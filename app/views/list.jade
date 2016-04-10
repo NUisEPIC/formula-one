@@ -42,7 +42,7 @@ block content
           dt Submitted at
           dd
             - var t = new Date(app.raw['last_cache_time'])
-            = t.toDateString() + ' ' + t.toLocaleTimeString() + '(' + app.raw['last_cache_time'] + ')'
+            = t.toDateString() + ' ' + t.toLocaleTimeString() + ' (' + app.raw['last_cache_time'] + ')'
           dt Email
           dd
             = app.raw['email'] || 'None, apparently. Weirdo.'
