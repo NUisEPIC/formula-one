@@ -9,7 +9,13 @@ html
     a(href='mailto:#{app.raw.email}')= app.raw.email
 
     dl
-      each answer, question in app.raw
+      - var questions = [ 'name', 'email', 'year' ]
+      - questions.push('major', 'phone', 'applying-for', 'what-do-you-want', 'run-hackathon')
+      - questions.push('run-business-pitch-competition', 'code', 'build-brand', 'teach-entrepreneurship')
+      - questions.push('inspire-entrepreneurs', 'expand-epic-reach', 'story', 'why-interested')
+      - questions.push('why-passionate-entrep', 'how-contribute', 'other-involvements', 'anything-else')
+      each question in questions
+        - var answer = app.raw[question]
         dt= question
         if (question == 'resume')
           dd

@@ -36,34 +36,37 @@ block content
         a(href='//formula-one.herokuapp.com/recruitment/application/_id:#{app._id}/view')
           = app.raw.name
         .block
-          dt Applying to EPIC Teams
+          dt Submitted at
           dd
-            = app.raw['apply-for-epic'] || 'no'
-          dt Applying to Participate in Launch
+            - var t = new Date(app.raw['last_cache_time'])
+            = t.toDateString() + ' ' + t.toLocaleTimeString() + '(' + app.raw['last_cache_time'] + ')'
+          dt Email
           dd
-            = app.raw['participate-in-launch'] || app.raw['apply-for-launch'] || 'no'
+            = app.raw['email'] || 'None, apparently. Weirdo.'
+          dt Applying for:
+          dd
+            = app.raw['applying-for'] || 'None. Whatever.'
         .block
-          p I want to
-          dt Build a Startup
+          p I want to:
+          dt Run a Hackathon (WildHacks)
           dd
-            = app.raw['build-a-startup'] || 'no'
-          dt Run a Hackaton
+            = app.raw['run-hackathon'] || 'no'
+          dt Run a Business Pitch Competition (NUVC)
           dd
-            = app.raw['run-a-hackathon'] || 'no'
-          dt Learn to Code
+            = app.raw['run-business-pitch-competition'] || 'no'
+          dt Code (Tech)
           dd
-            = app.raw['learn-to-code'] || 'no'
-          dt Teach Entrepreneurship
+            = app.raw['code'] || 'no'
+        .block
+          dt Build a Brand (Branding)
+          dd
+            = app.raw['build-brand'] || 'no'
+          dt Teach Entrepreneurship (Launch)
           dd
             = app.raw['teach-entrepreneurship'] || 'no'
-        .block
-          p I am a
-          dt Designer
+          dt Inspire Entrepreneurs
           dd
-            = app.raw['designer'] || 'no'
-          dt Hacker
+            = app.raw['inspire-entrepreneurs'] || 'no'
+          dt Expand EPIC's Reach (BizDev)
           dd
-            = app.raw['hacker'] || 'no'
-          dt Builder
-          dd
-            = app.raw['builder'] || 'no'
+            = app.raw['expand-epic-reach'] || 'no'
