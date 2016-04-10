@@ -90,6 +90,7 @@ router.post('/:program/application', function(req, res) {
 });
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
+// TODO(jordan): timestamp for 2016 apps: 1459656787000
 
 router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
@@ -121,6 +122,8 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
 
   if(endpoint == 'application') {
     query = Response.find({});
+  } else if (endpoint == 'application2016') {
+    query = Response.find().where('last_cache_time').gt(1459656787000)
   }
 
   // TODO(jordan): same for pfilter...
