@@ -123,7 +123,7 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
   if(endpoint == 'application') {
     query = Response.find({});
   } else if (endpoint == 'application2016') {
-    query = Response.find({}).where('last_cache_time').gt(1457126017618)
+    query = Response.find({}).where('raw.last_cache_time').gt(1457126017618)
   }
 
   // TODO(jordan): same for pfilter...
