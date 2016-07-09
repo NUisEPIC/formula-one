@@ -2,13 +2,18 @@ var mongoose = require('mongoose')
     , Schema = mongoose.Schema;
 
 var response = Schema({
-  for: {
-    type: String,
+  application: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'Application',
   },
-  raw: Schema.Types.Mixed,
-  receivedConfirmationEmail: {
-    type: Boolean,
-  },
+  answers: [
+    {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Answer',
+    }
+  ],
 });
 
 module.exports.response = response;
