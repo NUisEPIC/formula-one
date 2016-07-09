@@ -3,14 +3,7 @@ var mongoose = require('mongoose')
 
 var question = Schema({
   text: String,
-  type: {
-    type: Schema.Types.ObjectId,
-    ref : 'Ingredient'
-  },
-  ingredients: [ {
-    type: Schema.Types.ObjectId,
-    ref : 'Ingredient'
-  } ]
+  type: QuestionType,
 });
 
 module.exports.question = question;

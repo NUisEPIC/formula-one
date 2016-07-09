@@ -4,22 +4,18 @@ var mongoose = require('mongoose')
 var program = new Schema({
   name: {
     type: String,
-    index:   {
-      unique:   true,
-      dropDups: true
-    },
-    required: true
+    index: true,
+    unique: true,
+    required: true,
   },
   shortname: {
     type: String,
-    index: {
-      unique:   true,
-      dropDups: true
-    },
-    required: true
+    index: true,
+    unique: true,
+    required: true,
   },
   description: String,
-  year: Number
+  year: Number,
 });
 
 module.exports.program = program;

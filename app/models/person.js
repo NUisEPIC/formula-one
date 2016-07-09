@@ -1,15 +1,25 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , program  = require('./program.js').program;
+  , program  = require('./program').program;
 
 var person = Schema({
-  name: { first: { type: String,
-                   required: true },
-          last:  { type: String,
-                   required: true } },
-  email:   { type: String, required: true },
-  gender:  { type: String },
-  hearsay: { type: String }
+  name: {
+    first: {
+      type: String,
+      required: true,
+    },
+    last:  {
+      type: String,
+      required: true,
+    },
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  gender: {
+    type: String,
+  },
 });
 
 var Person = mongoose.model('Person', person);
