@@ -2,14 +2,22 @@ var express = require('express')
   , router = express.Router()
   , mongoose = require('mongoose')
   , Program = require('../models/program.js').Program
-  , Application = require('../models/application.js')
+  , Application = require('../models/application.js').Application
   , Response = require('../models/response.js').Response
   , Person = require('../models/person.js').Person
-  , ObjectId = require('mongoose').Types.ObjectId
-  , sendConfirmationEmail = require('../../confirmation-mailer.js').sendConfirmationEmail
-  , sendStartupEmails = require('../../mailer').sendStartupEmails
-  , _ = require('underscore')
   , basicAuth = require('basic-auth-connect');
+
+/* TODO(jordan):
+ *  - Split out the filtering logic into its own module
+ *  - Update the confirmation mail function to use the new mail API
+ *  - A way to update Programs, Applications, Questions in the Database
+ *  - Better authentication system than Basic Auth. (node-jsonwebtoken.)
+ *    - https://github.com/auth0/node-jsonwebtoken
+ *    - JSON web tokens (JWT) to manage state
+ *    - better hash our passwords though
+ *      - we can use Node's built-in crypto library for that
+ *
+ */
 
 require('dotenv').load();
 
@@ -37,7 +45,7 @@ router.post('/:program/application/update/:filter', function(req, res) {
   query.exec(function(err, doc) {
     if(err) console.log(err) && res.send(500, err);
     doc = doc[0];
-    _.extend(doc, req.body);
+    Object.assign(doc, req.body);
     doc.markModified('raw');
     doc.save(function(err) {
       if (err) console.log(err) && res.send(500, 'An error occurred while updating the document.');
@@ -46,6 +54,7 @@ router.post('/:program/application/update/:filter', function(req, res) {
   })
 })
 
+// FIXME(jordan): This needs to be replaced with more robust lookup logic.
 router.get('/:program/application/list', reviewAuth, function (req, res) {
 
   Response.find({
@@ -71,6 +80,7 @@ router.post('/:program/application', function(req, res) {
     }, function(err, newResponse) {
       var responseId = newResponse._id;
       if(err) console.log(err) && res.send(500, 'Error executing query');
+      // TODO(jordan): Update this to use the new mailer api.
       sendConfirmationEmail({
         name: req.body.name,
         email: req.body.email
@@ -93,11 +103,11 @@ router.post('/:program/application', function(req, res) {
 
 router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
-  var program   = req.params.program
-    , pfilter   = req.params.pfilter
-    , endpoint  = req.params.endpoint
-    , efilter   = req.params.efilter
-    , action    = req.params.action
+  var program  = req.params.program
+    , pfilter  = req.params.pfilter
+    , endpoint = req.params.endpoint
+    , efilter  = req.params.efilter
+    , action   = req.params.action
     , query;
 
   var handleError = function(err) {
@@ -158,7 +168,7 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, funct
 
       res.render('list', { applications: data })
     });
-  }else {
+  } else {
     query.exec(send);
   }
 })
