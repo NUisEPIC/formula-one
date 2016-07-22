@@ -7,6 +7,10 @@ var answer = Schema({
     ref: 'Question',
     required: true,
   },
+  textContent: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports.answer = answer;

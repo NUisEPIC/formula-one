@@ -15,7 +15,7 @@ var program = new Schema({
     required: true,
   },
   description: String,
-  year: Number,
+  startYear: Date,
 });
 
 module.exports.program = program;
