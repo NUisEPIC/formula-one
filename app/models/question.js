@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
 
 var question = Schema({
   text: String,
-  type: QuestionType,
+  //type: QuestionType,
 });
 
 module.exports.question = question;
