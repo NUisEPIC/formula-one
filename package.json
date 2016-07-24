@@ -14,6 +14,7 @@
     "dotenv": "^0.5.1",
     "express": "~4.11.0",
     "glob": "~4.3.1",
+    "jade": "^1.11.0",
     "mailgun-js": "^0.7.10",
     "method-override": "~2.3.0",
     "mongoose": "~3.8.20",
@@ -21,9 +22,12 @@
     "serve-favicon": "~2.2.0"
   },
   "devDependencies": {
+    "bcrypt": "^0.8.7",
+    "express-jwt": "^3.4.0",
     "gulp": "~3.8.10",
     "gulp-livereload": "~3.4.0",
     "gulp-nodemon": "~1.0.4",
-    "gulp-sass": "^2.0.4"
+    "gulp-sass": "^2.0.4",
+    "jsonwebtoken": "^7.1.6"
   }
 }
