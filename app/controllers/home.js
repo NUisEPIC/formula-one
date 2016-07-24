@@ -1,11 +1,13 @@
 var express = require('express')
   , router = express.Router()
   , mongoose = require('mongoose')
+  , expressJWT = require('express-jwt')
+  , jwt = require('jsonwebtoken')
   , Program = require('../models/program.js').Program
   , Application = require('../models/application.js').Application
   , Response = require('../models/response.js').Response
   , Person = require('../models/person.js').Person
-  , basicAuth = require('basic-auth-connect');
+  , User = require('../models/user.js').User;
 
 /* TODO(jordan):
  *  - Split out the filtering logic into its own module
@@ -21,18 +23,45 @@ var express = require('express')
 
 require('dotenv').load();
 
-var emailAuth = basicAuth(process.env.HTTP_BASIC_AUTH_USERNAME,
-                          process.env.HTTP_BASIC_AUTH_PASSWORD);
-
-var reviewAuth = basicAuth(process.env.APP_REVIEW_AUTH_USERNAME,
-                           process.env.APP_REVIEW_AUTH_PASSWORD);
-
 module.exports = function (app) {
   app.use('/', router);
 };
 
+// Require jwt authorization for all paths except '/' and '/authenticate'
+router.use(expressJWT({ secret: process.env.SECRET_KEY }).unless({ path: ['/authenticate', '/'] }));
+
 router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?');
+});
+
+router.post('/authenticate', function(req, res) {
+    // Ensure required fields are provided
+    if (!req.body.username || !req.body.password) {
+        res.status(400).send('Username and password required.');
+        return;
+    }
+
+    // Authentication!
+    User.findOne({ username: req.body.username }, function(err, user) {
+        if (err) throw err;
+
+        if (!user) {
+            res.status('400').send('Invalid credentials.');
+            return;
+        }
+
+        user.comparePassword(req.body.password, function(err, isMatch) {
+            if (err) throw err;
+
+            // If the password matches, return a json web token
+            if (isMatch) {
+                var token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY);
+                res.status('200').json(token);
+            } else {
+                res.status('401').send('Invalid credentials.');
+            }
+        });
+    });
 });
 
 router.post('/:program/application/update/:filter', function(req, res) {
@@ -55,7 +84,7 @@ router.post('/:program/application/update/:filter', function(req, res) {
 })
 
 // FIXME(jordan): This needs to be replaced with more robust lookup logic.
-router.get('/:program/application/list', reviewAuth, function (req, res) {
+router.get('/:program/application/list', function (req, res) {
 
   Response.find({
     for: 'EPIC Fall Recruitment 2015'
@@ -101,7 +130,7 @@ router.post('/:program/application', function(req, res) {
 
 // NOTE(jordan): LET'S BUILD TEH SUPERROUTE
 
-router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', reviewAuth, function(req, res) {
+router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res) {
   // NOTE(jordan): so many optional parameters!!!
   var program  = req.params.program
     , pfilter  = req.params.pfilter
