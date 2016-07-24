@@ -19,15 +19,15 @@
     "method-override": "~2.3.0",
     "mongoose": "~3.8.20",
     "morgan": "~1.5.0",
-    "serve-favicon": "~2.2.0"
-  },
-  "devDependencies": {
+    "serve-favicon": "~2.2.0",
     "bcrypt": "^0.8.7",
     "express-jwt": "^3.4.0",
+    "jsonwebtoken": "^7.1.6"
+  },
+  "devDependencies": {
     "gulp": "~3.8.10",
     "gulp-livereload": "~3.4.0",
     "gulp-nodemon": "~1.0.4",
-    "gulp-sass": "^2.0.4",
-    "jsonwebtoken": "^7.1.6"
+    "gulp-sass": "^2.0.4"
   }
 }
