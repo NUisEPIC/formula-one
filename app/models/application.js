@@ -2,6 +2,12 @@ var mongoose = require('mongoose')
   , Schema = mongoose.Schema
 
 var application = Schema({
+  program: {
+    type: Schema.types.ObjectId,
+    ref: 'Program',
+    required: true,
+    index: true,
+  },
   responses: [
     {
       type: Schema.Types.ObjectId,
