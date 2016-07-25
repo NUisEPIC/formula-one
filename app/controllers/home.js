@@ -183,7 +183,7 @@ function parseBoolean (v) {
 function parseKeyValuePair (key, value) {
   // NOTE(jordan): I have no idea how to support logical operators right now.
   //, logicalOperators     = [ 'and', 'or', 'not', 'nor' ]
-  const arrayOperators     = [ 'in', 'all', 'in', 'nin' ]
+  const arrayOperators     = [ 'all', 'in', 'nin' ]
       , valueOperators     = [ 'eq', 'ne' ]
       , numericOperators   = [ 'gt', 'gte', 'lt', 'lte', 'size' ]
       , booleanOperators   = [ 'exists' ]
