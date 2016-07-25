@@ -1,6 +1,6 @@
 var mongoose = require('mongoose')
   , Schema   = mongoose.Schema
-  , program  = require('./program').program;
+  , program  = require('./program').program
 
 var person = Schema({
   name: {
@@ -20,9 +20,9 @@ var person = Schema({
   gender: {
     type: String,
   },
-});
+})
 
-var Person = mongoose.model('Person', person);
+var Person = mongoose.model('Person', person)
 
-module.exports.person = person;
-module.exports.Person = Person;
+module.exports.person = person
+module.exports.Person = Person

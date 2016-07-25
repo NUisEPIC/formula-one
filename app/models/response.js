@@ -1,5 +1,5 @@
 var mongoose = require('mongoose')
-    , Schema = mongoose.Schema;
+    , Schema = mongoose.Schema
 
 var response = Schema({
   application: {
@@ -14,7 +14,7 @@ var response = Schema({
       ref: 'Answer',
     }
   ],
-});
+})
 
-module.exports.response = response;
-module.exports.Response = mongoose.model('Response', response);
+module.exports.response = response
+module.exports.Response = mongoose.model('Response', response)

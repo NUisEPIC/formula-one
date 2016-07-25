@@ -14,9 +14,9 @@ var application = Schema({
       ref: 'Question',
     }
   ],
-});
+})
 
-var Application = mongoose.model('Application', application);
+var Application = mongoose.model('Application', application)
 
-module.exports.application = application;
-module.exports.Application = Application;
+module.exports.application = application
+module.exports.Application = Application

@@ -4,7 +4,7 @@ var mongoose = require('mongoose')
 var question = Schema({
   text: String,
   //type: QuestionType,
-});
+})
 
-module.exports.question = question;
-module.exports.Question = mongoose.model('Question', question);
+module.exports.question = question
+module.exports.Question = mongoose.model('Question', question)

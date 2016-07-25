@@ -16,7 +16,7 @@ var program = new Schema({
   },
   description: String,
   startYear: Date,
-});
+})
 
-module.exports.program = program;
-module.exports.Program = mongoose.model('Program', program);
+module.exports.program = program
+module.exports.Program = mongoose.model('Program', program)

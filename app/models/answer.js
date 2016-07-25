@@ -1,5 +1,5 @@
 var mongoose = require('mongoose')
-    , Schema = mongoose.Schema;
+    , Schema = mongoose.Schema
 
 var answer = Schema({
   question: {
@@ -11,7 +11,7 @@ var answer = Schema({
     type: String,
     required: true,
   },
-});
+})
 
-module.exports.answer = answer;
-module.exports.Answer = mongoose.model('Answer', answer);
+module.exports.answer = answer
+module.exports.Answer = mongoose.model('Answer', answer)
