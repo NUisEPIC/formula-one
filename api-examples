@@ -58,7 +58,7 @@ GET /recruitment/!/application => The current recruitment application (if any; e
 GET /recruitment/! => Same as above.
 GET /recruitment/year:2015/application => All 2015 recruitment applications.
 GET /recruitment/year:2015 => Same as above.
-GET /recruitment/year:2015;quarter:spring/application => Spring quarter 2016 recruitment
+GET /recruitment/year:2015;quarter:spring/application => Spring quarter 2015 recruitment
       application.
 GET /recruitment/year:2015;quarter:spring => Same as above.
 GET /recruitment/responses => All recruitment application responses (ever to any application).
@@ -74,7 +74,7 @@ GET /scf/responses/resume:$exists => Startup career fair applications where a re
 GET /scf/!/responses/resume:$exists => Most recent / "current" startup career fair applications
       where a resume was given.
 GET /scf/year:2015/responses/resume:$exists => SCF apps in 2015 where a resume was given.
-GET /scf/!/responses/interests:$in:business,marketing => SCF apps where business or marketing were 
+GET /scf/!/responses/interests:$in:business,marketing => SCF apps where business or marketing were
       given as interests.
 GET /scf/!/responses/interests:$all:business,marketing => SCF apps where business and marketing were
       both given as insterests.
@@ -112,7 +112,7 @@ PUT /wh/!/questions/$push:$position:2 => Insert a new question into the current 
       position 2 between the current 2nd and 3rd questions (insert a new 3rd question and shift all
       the existing questions down 1).
 
->>>>> "*" routes should not work with PUT. PUT is by nature idempotent and exhaustive; "*" implies
+>>>>> "*" routes should not work with PUT. PUT is by nature idempotent and exclusive; "*" implies
       otherwise.
 
  PATCH
@@ -126,7 +126,7 @@ PATCH /*/responses/_id:my_id => Same as above, but only if you are an administra
 >>>>> As I think about it, I think "*" routes should not work with PATCH. There's not much real use
       there, since the whole point of "*" is to query many programs at once and while it's not silly
       to imagine a question being used by two different programs, for instance, it is silly to think
-      you'd want to update both of them at once. PATCH is by nature exhaustive, and "*" implies
+      you'd want to update both of them at once. PATCH is by nature exclusive, and "*" implies
       otherwise.
 
  DELETE
@@ -170,7 +170,7 @@ GET /launch/questions
 
 What are the questions we used in the most recent launch application?
 
-GET /launch/!
+GET /launch/!/questions
 
 Take down the current launch application, we accidentally put it live too early.
 
