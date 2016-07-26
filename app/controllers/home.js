@@ -231,7 +231,7 @@ function parseFilter (filterStr) {
   let criteria  = { }
 
   for (const [ unparsedKey, unparsedValue ] of kvPairs) {
-    [ key, value ] = parseKeyValuePair(unparsedKey, unparsedValue)
+    const [ key, value ] = parseKeyValuePair(unparsedKey, unparsedValue)
     criteria[key] = value
   }
 
