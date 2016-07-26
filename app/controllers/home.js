@@ -244,7 +244,6 @@ router.get('/:program/:pfilter?/:endpoint/:efilter?/:action?', function(req, res
 
   // NOTE(jordan): Predicates for filter parsing.
   // LIMITATION: Cannot write queries containing ":" or ";".
-  // TODO(jordan): Refactor into parseFilter.
   const keyValuePairRx = /^([^:,]+):([^:,]+)$/
       , filterRx = /^([^:,]+):([^:,]+)(?:,([^:,]+):([^:,]+))*/
   const isFilter = str => filterRx.test(str)
