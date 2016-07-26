@@ -155,8 +155,15 @@ const Endpoints = {
   'response': Response,
 }
 
-function parseArray (v) {
-  return v.split(',').map(parseValue)
+function parseNumber (v) {
+  if (~v.indexOf('.')) return parseFloat(v)
+  else return parseInt(v)
+}
+
+function parseBoolean (v) {
+  if (v === 'true') return true
+  if (v === 'false') return false
+  throw 'boolean parse error'
 }
 
 function parseValue (v) {
@@ -166,18 +173,13 @@ function parseValue (v) {
   try {
     return parseNumber(v)
   } catch (e) { }
-  throw 'parse error'
+
+  // NOTE(jordan): All string queries should be case insensitive.
+  return new RegExp(val, 'i')
 }
 
-function parseNumber (v) {
-  if (~v.indexOf('.')) return parseFloat(v)
-  else return parseInt(v)
-}
-
-function parseBoolean (v) {
-  if (v === 'true') return true
-  if (v === 'false') return false
-  throw 'parse error'
+function parseArray (v) {
+  return v.split(',').map(parseValue)
 }
 
 function parseKeyValuePair (key, value) {
