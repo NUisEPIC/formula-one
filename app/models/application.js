@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
 
 var application = Schema({
   program: {
-    type: Schema.types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Program',
     required: true,
     index: true,
