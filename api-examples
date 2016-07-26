@@ -1,0 +1,215 @@
+===============
+ SPECIAL CASES
+===============
+
+ ON "*"
+========
+The "*" special route requires authorization as an administrator with full access to view everything
+on the entire API. This route lets the administrator see all currently registered programs, all live
+applications, etc. It can be used as a wildcard in place of a `:program`.
+
+"*" Only works with GET and, in some specific cases, with DELETE. You cannot "batch PUT" or some
+nonsense by using "*" in a hacky way.
+
+ ON "!"
+========
+The "!" special route should not required authorization, but should 410 when the current application
+expires. However, if you are an authorized administrator, you should never get a 410 but instead get
+the most recently live application's results for whatever your query. It can be used only in the
+place of an application filter, and cannot be combined with any other filters.
+
+"!" Can be used in any query that can have an application filter. (So pretty much any query.)
+
+ ON "application"
+==================
+In all places it can be, "application" will be taken implicitly. It can only be used explicitly if
+you are trying to get access to an application itself. You cannot use "application" as part of a
+query looking for "responses" to a particular application; it is implied by the "responses"
+endpoint. However, if you are trying to get a particular application, you can append "application"
+to your query URL.
+
+✗ GET /sprout/year:2016/application/responses/portfolio:$exists
+✓ GET /sprout/year:2016/application
+✓ GET /sprout/year:2016/responses/portfolio:$exists
+
+Exception: If you are POSTing a new application, you MUST specify "application" in the route. Also
+you cannot POST to "!", that doesn't make any sense.
+
+✗ POST /sprout/year:2016
+✗ POST /sprout/!
+✓ POST /sprout/application
+
+==========
+ EXAMPLES
+==========
+
+ GET
+=====
+GET /* => All programs.
+GET /*/! => All currently live applications.
+GET /*/responses => All responses to every application ever.
+GET /*/!/responses => All responses to every currently live application.
+GET /recruitment => The recruitment Program.
+GET /wh => The WildHacks Program.
+GET /recruitment/!/application => The current recruitment application (if any; else 404 or
+      410 "Gone" if it has expired). "!" is just a special filter for "current". If you are
+      authorized as an administrator, you will not get 410 "Gone" but will always get the most
+      recently live application.
+GET /recruitment/! => Same as above.
+GET /recruitment/year:2015/application => All 2015 recruitment applications.
+GET /recruitment/year:2015 => Same as above.
+GET /recruitment/year:2015;quarter:spring/application => Spring quarter 2016 recruitment
+      application.
+GET /recruitment/year:2015;quarter:spring => Same as above.
+GET /recruitment/responses => All recruitment application responses (ever to any application).
+GET /recruitment/application/responses => 404 too prolix.
+GET /recruitment/!/responses => Responses to the most recently live application (if any; else 410
+      "Gone" if it has expired and you are not an administrator).
+GET /recruitment/year:2016/responses => 2016 recruitment application responses.
+GET /recruitment/year:2016/responses/name.first:aar => 2016 recruitment applications where
+      name.first starts with "aar". (This and the previous query will both match applications from
+      every quarter in which there was an application; so probably spring and fall in this case.)
+GET /scf/responses/resume:$exists => Startup career fair applications where a resume was given. This
+      is a query over ALL scf responses EVER.
+GET /scf/!/responses/resume:$exists => Most recent / "current" startup career fair applications
+      where a resume was given.
+GET /scf/year:2015/responses/resume:$exists => SCF apps in 2015 where a resume was given.
+GET /scf/!/responses/interests:$in:business,marketing => SCF apps where business or marketing were 
+      given as interests.
+GET /scf/!/responses/interests:$all:business,marketing => SCF apps where business and marketing were
+      both given as insterests.
+GET /scf/!/responses/~skip:20;~limit:10;interests:$nin:business => SCF apps from index 20-30 where
+      business was not given as an interest.
+GET /scf/!/responses/~sort:+updated_at => SCF apps sorted in increasing order by updated_at (most
+      recently updated order).
+GET /wh/year:2014/questions => Questions on the WH 2014 application.
+GET /wh/!/questions => Questions on the current WH application (if any; else 410 "Gone" for expired).
+GET /wh/!/questions/$slice:5,3 => Questions 5-8 (5, 6, and 7) from the current WH app (if any; else
+      410 "Gone" for expired).
+
+ POST
+======
+POST /:program => Creates a new program if :program does not already exist.
+POST /wh/application => Creates a new application for WH.
+POST /scf/responses => Creates a new response to the current scf application (if any; else 410
+      Gone if there is no current live application or 409 Conflict if the application you're trying
+      to POST is not unique (ie you already have an application and you should PATCH it).
+POST /wh/questions => Creates a new WH application question.
+POST /wh/some:filter/application => 400 malformed request. POST should never filter.
+POST /recruitment/responses/_id:myId => 400 malfrormed request. You should use PATCH.
+
+>>>>> "*" Should not work with POST. The semantics are too confusing. What would it mean to POST a
+      new question to two applications at once? They can't share a reference, because if they did
+      you'd be able to update the two applications at the same time and that's a recipe for chaos.
+
+ PUT
+=====
+PUT /recruitment/!/application => Replace the currently live application with the PUT one.
+PUT /wh/year:2015/questions/$slice:5,1 => Replace the 2015 WH application's question 5 with
+      the Question being PUT. If this query is not exclusive, give 409 Conflict. (i.e.; if you are
+      trying to PUT to a query that results in more than one Question.)
+PUT /wh/!/questions/$push:$position:2 => Insert a new question into the current WH application at
+      position 2 between the current 2nd and 3rd questions (insert a new 3rd question and shift all
+      the existing questions down 1).
+
+>>>>> "*" routes should not work with PUT. PUT is by nature idempotent and exhaustive; "*" implies
+      otherwise.
+
+ PATCH
+=======
+PATCH /launch/!/application => Partially update the currently live launch application.
+PATCH /launch/!/responses/_id:my_id => Partially update the "_id:my_id" response to the current
+      launch application. 409 Conflict if the query is not exclusive.
+PATCH /launch/responses/_id:my_id => Same as above.
+PATCH /*/responses/_id:my_id => Same as above, but only if you are an administrator(?).
+
+>>>>> As I think about it, I think "*" routes should not work with PATCH. There's not much real use
+      there, since the whole point of "*" is to query many programs at once and while it's not silly
+      to imagine a question being used by two different programs, for instance, it is silly to think
+      you'd want to update both of them at once. PATCH is by nature exhaustive, and "*" implies
+      otherwise.
+
+ DELETE
+========
+DELETE /recruitment/!/application => Take down the currently live application - this does not
+      necessarily delete the application itself, just takes it down.
+DELETE /recruitment/year:2015/application => Deletes the 2015 recruitment application. 409 Conflict
+      if the query is not exclusive.
+DELETE /wh/!/responses/_id:my_id => Deletes the "_id:my_id" response to the currently live WH
+      application - 410 "Gone" if the application is no longer live, 409 Conflict if the query is
+      not exclusive.
+DELETE /launch/year:2015 => Deletes the 2015 launch application. 409 Conflict if the query is not
+      exclusive.
+DELETE /*/! => Takes down all currently live applications. (Crazy power.)
+DELETE /*/responses => 403 too much power for any one [wo]man.
+DELETE /*/{anything you might imagine putting here} => 403 HI VOLTAGE KEEP OUT.
+
+Really, what I want, is to scope *application* by *program*.
+That makes a lot of sense, and I should focus on providing that featureset.
+
+=========
+ STORIES
+=========
+
+Editing the WH application. Add a new question to the end.
+
+POST /wh/questions (create a new question)
+POST /wh/!/$push:questions (put the question in the current application)
+
+Editing the WH application. Replace the 2nd question with a different question.
+
+PUT /wh/!/questions/$slice:2,1
+
+Editing the launch application. Insert a question between qs 2 and 3.
+
+POST /launch/!/questions/$push:$position:2
+
+What are the questions we've used in past applications for launch?
+
+GET /launch/questions
+
+What are the questions we used in the most recent launch application?
+
+GET /launch/!
+
+Take down the current launch application, we accidentally put it live too early.
+
+DELETE /launch/!
+
+There's never been a sprout application before. Let's make one.
+
+POST /sprout/application
+
+Let's create some sprout questions.
+
+POST /sprout/questions
+POST /sprout/questions
+POST /sprout/questions (you can POST multiple questions why not)
+
+Now let's attach those questions to our application.
+
+PUT /sprout/_id:the_application_above/questions
+  [ 1, 2, 3 ]
+  or
+PATCH /sprout/_id:the_application_above or, equivalently,
+PATCH /sprout/_id:the_application_above/application
+  { questions: [ 1, 2, 3 ] }
+
+Now let's make that application be currently live.
+
+PUT /sprout/!
+  the_application_above
+
+Whoops! We put it live before setting and endDate. Let's take it down.
+
+DELETE /sprout/!
+
+What if instead we fixed it in place?
+
+PATCH /sprout/!
+  { endDate: Date.two.weeks.from.now() }
+
+>> The above will update the original application since ! is just an alias.
+
+>> The stories above are by no means exhaustive, but it seems like a good start to me.
+
