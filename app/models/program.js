@@ -18,5 +18,11 @@ var program = new Schema({
   startYear: Date,
 })
 
+program.virtual('applications', {
+  ref: 'Application',
+  localField: '_id',
+  foreignField: 'program',
+})
+
 module.exports.program = program
 module.exports.Program = mongoose.model('Program', program)
