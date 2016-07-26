@@ -8,18 +8,28 @@ var application = Schema({
     required: true,
     index: true,
   },
-  responses: [
-    {
-      type: Schema.Types.ObjectId,
-      ref:  'Response',
-    }
-  ],
   questions: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Question',
     }
   ],
+  schedule: {
+    start: {
+      type: Date,
+      required: true,
+    },
+    end: {
+      type: Date,
+      required: true,
+    },
+  },
+})
+
+application.virtual('responses', {
+  ref: 'Response',
+  localField: '_id',
+  foreignField: 'application',
 })
 
 var Application = mongoose.model('Application', application)
