@@ -78,14 +78,14 @@ GET /scf/!/responses/interests:$in:business,marketing => SCF apps where business
       given as interests.
 GET /scf/!/responses/interests:$all:business,marketing => SCF apps where business and marketing were
       both given as insterests.
-GET /scf/!/responses/~skip:20;~limit:10;interests:$nin:business => SCF apps from index 20-30 where
+GET /scf/!/responses/$skip:20;$limit:10;interests:$nin:business => SCF apps from index 20-30 where
       business was not given as an interest.
-GET /scf/!/responses/~sort:+updated_at => SCF apps sorted in increasing order by updated_at (most
+GET /scf/!/responses/$sort:+updated_at => SCF apps sorted in increasing order by updated_at (most
       recently updated order).
 GET /wh/year:2014/questions => Questions on the WH 2014 application.
 GET /wh/!/questions => Questions on the current WH application (if any; else 410 "Gone" for expired).
-GET /wh/!/questions/$slice:5,3 => Questions 5-8 (5, 6, and 7) from the current WH app (if any; else
-      410 "Gone" for expired).
+GET /wh/!/questions:$slice:5,3 => Questions 5-8 (5, 6, and 7) from the current WH app (if any; else
+      410 "Gone" for expired). (This is the $slice *projection*.)
 
  POST
 ======
@@ -105,10 +105,7 @@ POST /recruitment/responses/_id:myId => 400 malfrormed request. You should use P
  PUT
 =====
 PUT /recruitment/!/application => Replace the currently live application with the PUT one.
-PUT /wh/year:2015/questions/$slice:5,1 => Replace the 2015 WH application's question 5 with
-      the Question being PUT. If this query is not exclusive, give 409 Conflict. (i.e.; if you are
-      trying to PUT to a query that results in more than one Question.)
-PUT /wh/!/questions/$push:$position:2 => Insert a new question into the current WH application at
+PUT /wh/!;$push:questions:$position:2 => Insert a new question into the current WH application at
       position 2 between the current 2nd and 3rd questions (insert a new 3rd question and shift all
       the existing questions down 1).
 
@@ -154,15 +151,15 @@ That makes a lot of sense, and I should focus on providing that featureset.
 Editing the WH application. Add a new question to the end.
 
 POST /wh/questions (create a new question)
-POST /wh/!/$push:questions (put the question in the current application)
+POST /wh/!;$push:questions (put the question in the current application)
 
 Editing the WH application. Replace the 2nd question with a different question.
 
-PUT /wh/!/questions/$slice:2,1
+PUT /wh/!;$push:$slice:questions:2,1 (modifier)
 
 Editing the launch application. Insert a question between qs 2 and 3.
 
-POST /launch/!/questions/$push:$position:2
+POST /launch/!/questions:$push:$position:2
 
 What are the questions we've used in past applications for launch?
 
