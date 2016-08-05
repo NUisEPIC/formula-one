@@ -17,5 +17,7 @@ var app = express();
 
 require('./config/express')(app, config);
 
+console.log(`Starting server at localhost:${config.port}`)
+
 app.listen(config.port);
 
