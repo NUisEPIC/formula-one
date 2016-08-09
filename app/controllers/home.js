@@ -36,34 +36,36 @@ router.get('/', function (req, res, next) {
   res.send('Heyo, there\'s no front door here. Maybe you got here by mistake?')
 })
 
+// TODO(jordan): Transition from user-based authentication to client secret-based authentication.
 router.post('/authenticate', function(req, res) {
-    // Ensure required fields are provided
-    if (!req.body.username || !req.body.password) {
-        res.status(400).send('Username and password required.')
-        return
+  // Ensure required fields are provided
+  if (!req.body.username || !req.body.password) {
+    res.status(400).send('Username and password required.')
+    return
+  }
+
+  // Authentication!
+  User.findOne({ username: req.body.username }, function(err, user) {
+    if (err) throw err
+
+    if (!user) {
+      res.status('400').send('Invalid credentials.')
+      return
     }
 
-    // Authentication!
-    User.findOne({ username: req.body.username }, function(err, user) {
-        if (err) throw err
+    user.comparePassword(req.body.password, function(err, isMatch) {
+      if (err) throw err
 
-        if (!user) {
-            res.status('400').send('Invalid credentials.')
-            return
-        }
-
-        user.comparePassword(req.body.password, function(err, isMatch) {
-            if (err) throw err
-
-            // If the password matches, return a json web token
-            if (isMatch) {
-                var token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY)
-                res.status('200').json(token)
-            } else {
-                res.status('401').send('Invalid credentials.')
-            }
-        })
+      // If the password matches, return a json web token
+      if (isMatch) {
+        // FIXME(jordan): There is no token expiry.
+        var token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY)
+        res.status('200').json(token)
+      } else {
+        res.status('401').send('Invalid credentials.')
+      }
     })
+  })
 })
 
 // router.post('/:program/application/update/:filter', function(req, res) {
@@ -138,6 +140,7 @@ Actions._handleError = (err, res) => {
 Actions._send = (data, req, res) => {
   if (data === null || data === '' || data === [])
     res.send([])
+  // FIXME(jordan): This is far from a bulletproof series of checks and conversions.
   else res.send(isNaN(data) ? data : data.toString())
 }
 Actions._wrapWithErrorHandling = method => (query, req, res) => action => {
@@ -161,6 +164,7 @@ const Endpoints = {
   'question': Question,
 }
 
+// NOTE(jordan): aliases the plural form for ease of use.
 Endpoints.responses = Endpoints.response
 Endpoints.questions = Endpoints.question
 
