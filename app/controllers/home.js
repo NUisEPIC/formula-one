@@ -263,16 +263,18 @@ function parseKeyValuePair (key, value) {
   return [ key, parsedValue ]
 }
 
-function splitOnFirst (str, c) {
-  const i = str.indexOf(c)
-  return ~i ? [ str.substr(0, i), str.substr(i + 1) ] : str
+function splitOnFirst (c) {
+  return (str) => {
+    const i = str.indexOf(c)
+    return ~i ? [ str.substr(0, i), str.substr(i + 1) ] : str
+  }
 }
 
 function parseFilter (filterStr) {
   // Tokenize
   const kvPairs = filterStr.split(';')
                            .filter(s => s.length > 0)
-                           .map(s => splitOnFirst(s, ':'))
+                           .map(splitOnFirst(':'))
                            .map(pts => [ pts[0], pts.slice(1).join(':') ])
                            .filter(([k, v]) => k.length > 0 && !!v)
   let criteria  = { }
