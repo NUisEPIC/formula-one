@@ -3,6 +3,8 @@ var express = require('express')
   , glob = require('glob')
   , mongoose = require('mongoose')
 
+mongoose.Promise = global.Promise
+
 mongoose.connect(config.db);
 var db = mongoose.connection;
 db.on('error', function () {
