@@ -9,6 +9,7 @@ var express = require('express')
   , Question = require('../models/question.js').Question
   , Person = require('../models/person.js').Person
   , User = require('../models/user.js').User
+  , util = require('util')
 
 /* TODO(jordan):
  *  - Split out the filtering logic into its own module
@@ -156,12 +157,10 @@ Actions.count = Actions._wrapWithErrorHandling('count')
 Actions.fallback = Actions._wrapWithErrorHandling('exec')
 
 const Endpoints = {
-  'application': Application,
   'response': Response,
   'question': Question,
 }
 
-Endpoints.applications = Endpoints.application
 Endpoints.responses = Endpoints.response
 Endpoints.questions = Endpoints.question
 
@@ -213,84 +212,125 @@ function parseKeyValuePair (key, value) {
 
   const specialOperators   = [ 'sort', 'limit', 'skip', 'slice', 'push' ]
 
+  let parsedValue
+
   console.log(`Parse KV: ${key}, ${value}`)
 
   if ( specialOperators.some(op => ~key.indexOf(op)) ) {
     console.log(`Parse: special operator: ${key}`)
     const [ operator ] = key.split(':')
     key = operator
+    parsedValue = value
     // TODO(jordan): Support $push and etc. here
-  } else if ( operatorsWhitelist.some(op => ~value.indexOf(op)) ) {
+
+  } else if ( ~value.indexOf('$') ) {
     // Supports a subset of https://docs.mongodb.com/manual/reference/operator/query/
     console.log(`Parse: operator in: ${value}`)
     const [ operator, arg ] = value.split(':')
     console.log(`Operator: ${operator}, Value: ${arg}`)
-    value = {}
+    parsedValue = {}
     try {
-      if ( ~arrayOperators.indexOf(operator.substr(1)) ) {
+      if ( !operatorsWhitelist.some(op => ~value.indexOf(`$${op}`)) ) {
+        console.log(`Parse: bad operator.`)
+        throw `Parse: Bad operator.`
+      } else if ( ~arrayOperators.indexOf(operator.substr(1)) ) {
         console.log(`Parse: array operator`)
-        value[operator] = parseArray(arg)
+        parsedValue[operator] = parseArray(arg)
       } else if ( ~numericOperators.indexOf(operator.substr(1)) ) {
         console.log(`Parse: numeric operator`)
-        value[operator] = parseNumber(arg)
+        parsedValue[operator] = parseNumber(arg)
       } else if ( ~booleanOperators.indexOf(operator.substr(1)) ) {
         console.log(`Parse: boolean operator`)
-        value[operator] = arg ? parseBoolean(arg) : true
+        parsedValue[operator] = arg ? parseBoolean(arg) : true
       } else if ( ~valueOperators.indexOf(operator.substr(1)) ) {
         console.log(`Parse: value operator`)
-        value[operator] = parseValue(arg)
+        parsedValue[operator] = parseValue(arg)
       } else {
-        // NOTE(jordan): Unfortunately, this shouldn't happen, and I shouldn't need this code.
+        /* NOTE(jordan): Unfortunately, this shouldn't happen, and I shouldn't need this code.
+         *   But JavaScript is a fundamentally unsafe language.
+         */
         throw 'you are a bad programmer because that shit was supposed to be exhaustive'
       }
     } catch (e) {
-      console.error(e)
+      console.error(`[caught error]:`, e)
       return [ false, false ]
     }
+
   } else {
-    value = parseValue(value)
+    parsedValue = parseValue(value)
   }
 
-  return [ key, value ]
+  return [ key, parsedValue ]
 }
 
-function lexFilter (filterStr) {
+function splitOnFirst (str, c) {
+  const i = str.indexOf(c)
+  return ~i ? [ str.substr(0, i), str.substr(i + 1) ] : str
+}
+
+function parseFilter (filterStr) {
   // Tokenize
   const kvPairs = filterStr.split(';')
-                           .map(s => s.split(':'))
+                           .filter(s => s.length > 0)
+                           .map(s => splitOnFirst(s, ':'))
                            .map(pts => [ pts[0], pts.slice(1).join(':') ])
-                           .filter(([k, v]) => k.length > 0 && v.length > 0)
+                           .filter(([k, v]) => k.length > 0 && !!v)
   let criteria  = { }
 
   // Then structure
   for (const [ unparsedKey, unparsedValue ] of kvPairs) {
     const [ key, value ] = parseKeyValuePair(unparsedKey, unparsedValue)
-    criteria[key] = value
+    if (key && value) criteria[key] = value
   }
 
   return criteria
 }
 
-function parseFilter (filterStr) {
-  // Tokenizes and structures
-  let criteria = lexFilter(filterStr)
-  // Now we need to interpret
-  // TODO(jordan): translate parsed tokens into [ { method: ...args } ] list ("clauses")
+function mapCriteriaToMongoose (criteria) {
+  // Output: Array: [ { method: [ ...args] }, ... ]
+  const clauses = []
 
-  return criteria
+  for (let fieldOrOperator of Object.keys(criteria)) {
+    const value     = criteria[fieldOrOperator]
+        , valueKeys = Object.keys(value)
+    if (fieldOrOperator.startsWith('~')) {
+      // Special operator.
+      // Strip the leading '~'.
+      const op = fieldOrOperator.substr(1)
+      clauses.push({ [op]: value.split(',') })
+    } else if (valueKeys.length > 0) {
+      // Has to be an operator.
+      // Let us assume, that there is only one operator.
+      const op = valueKeys[0]
+          , arg = value[op]
+      clauses.push({ where: [ fieldOrOperator ] })
+      // Strip the leading '$' from op.
+      clauses.push({ [op.substr(1)]: [ arg ] })
+    } else {
+      // This is the simple case.
+      clauses.push({ where: [ fieldOrOperator ] })
+      clauses.push({ equals: [ value ] })
+    }
+  }
+
+  return clauses
 }
+
+//router.get('/:program/:pfilter?/application/:action?')
 
 router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, res) {
   // NOTE(jordan): Predicates for filter parsing.
-  // LIMITATION: Cannot write queries containing ":" or ";".
+  // LIMITATION: Cannot write queries containing "$", ":", or ";".
   const keyValuePairRx = /^([^:,]+):([^:,]+)$/
-      , filterRx = /^([^:,]+):([^:,]+)(?:,([^:,]+):([^:,]+))*/
+      , filterRx = /^([^:,]+):([^,]+)(?:;([^:,]+):([^:,]+))*/
   const isFilter = str => filterRx.test(str)
 
   // NOTE(jordan): Extract route parameters.
   let { program, pfilter, endpoint, efilter, action } = req.params
 
-  console.log(`Received request`)
+  console.log(`Da kine biggun super route received request.`)
+  console.log(` ^^^ that might be racist and you should be careful what you say.`)
+  console.log(` → Hawai'i pidgin is a legitimate language!`)
   console.log(`
     params:
       0: ${program}
@@ -303,6 +343,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
   if ( !pfilter ) {
     // NOTE(jordan): This has to be a program query w/o an Action.
     const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
+                         .select('-_id -__v')
     return Actions.fallback(query, req, res)()
   }
 
@@ -323,31 +364,36 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       action: ${action}
   `)
 
-  if ( !endpoint in Endpoints ) {
-    res.status(400).send('You done did not give a good endpoint.')
+  if ( !(endpoint in Endpoints) ) {
+    return res.status(400).send('You done did not give a good endpoint.')
   }
 
-  let applicationCriteria, endpointCriteria
+  let applicationClauses = []
 
-  // NOTE(jordan): Lost partial search by default because rxsi isn't being used.
   if (pfilter) {
+    console.log(`Found an application filter: ${pfilter}.`)
     applicationCriteria = parseFilter(pfilter)
-    console.log(applicationCriteria)
+    console.log(`Parsed:`, applicationCriteria)
+    clauses = mapCriteriaToMongoose(applicationCriteria)
+    console.log(`Mapped to clauses:`, util.inspect(clauses, { depth: null }))
   }
 
-  const applicationQuery = Application.find(applicationCriteria)
+  const applicationQuery = Application.find()
+  // Now apply the clauses.
 
-  if (endpoint === 'application') {
-    // Done.
-    return Actions.fallback(applicationQuery, req, res)()
-  }
+  let endpointClauses = []
 
   if (efilter) {
+    console.log(`Found an endpoint filter: ${efilter}.`)
     endpointCriteria = parseFilter(efilter)
-    console.log(endpointCriteria)
+    console.log(`Parsed:`, endpointCriteria)
+    clauses = mapCriteriaToMongoose(endpointCriteria)
+    console.log(`Mapped to clauses:`, util.inspect(clauses, { depth: null }))
   }
 
-  const endpointQuery = Endpoints[endpoint].find(endpointCriteria)
+  // NOTE(jordan): This silly map would be easier to create if we were using ES6 Imports.
+  const endpointQuery = Endpoints[endpoint].find()
+  // Now apply the clauses.
 
   return res.status(200).send()
 
