@@ -164,7 +164,7 @@ const Endpoints = {
   'question': Question,
 }
 
-// NOTE(jordan): aliases the plural form for ease of use.
+// NOTE(jordan): Aliases the plural form for ease of use.
 Endpoints.responses = Endpoints.response
 Endpoints.questions = Endpoints.question
 
