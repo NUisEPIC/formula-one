@@ -133,27 +133,42 @@ router.post('/authenticate', function(req, res) {
 // })
 
 const Actions = { }
-Actions._handleError = (err, res) => {
+Actions._handleError = res => err => {
   console.error(err)
   res.status(500).send('Whups, popped a gasket.')
 }
-Actions._send = (data, req, res) => {
-  if (data === null || data === '' || data === [])
+Actions._send = (req, res) => data => {
+  console.log(`Send data: ${data}`)
+  console.log(`Data checks:
+      typeof(data) ? ${typeof(data)}
+      data.length ? ${data.length}
+      data === null : ${data === null}
+      data === undefined : ${data === undefined}
+      data === '' : ${data === ''}
+      data === [] : ${data === []}
+      data.length === 0 : ${data.length === 0}
+      data === NaN : ${data === NaN}
+      isNaN(data) : ${isNaN(data)}
+      !data: ${!data}
+  `)
+  if (data === null
+      || data === undefined
+      || data === ''
+      || data === []
+      || data === NaN
+      || (data instanceof Array && data.length === 0)
+  ) {
     res.send([])
+  }
   // FIXME(jordan): This is far from a bulletproof series of checks and conversions.
-  else res.send(isNaN(data) ? data : data.toString())
+  else {
+    res.send(isNaN(data) ? data : data.toString())
+  }
 }
-Actions._wrapWithErrorHandling = method => (query, req, res) => action => {
-  query[method]((err, data) => {
-    if (err) Actions._handleError(err, res)
-    // NOTE(jordan): at this point if there was an error a response has been sent.
-    else if (action && typeof action === 'string' && action in Actions)
-      Actions[action](data, req, res)
-    else if (action && typeof action === 'function')
-      action(data, req, res)
-    else
-      Actions._send(data, req, res)
-  })
+Actions._wrapWithErrorHandling = method => (query, req, res) => {
+  query[method]()
+    .then(Actions._send(req, res))
+    .catch(Actions._handleError(res))
 }
 
 Actions.count = Actions._wrapWithErrorHandling('count')
@@ -189,9 +204,8 @@ function parseValue (v) {
   try {
     return parseNumber(v)
   } catch (e) { }
-
-  // NOTE(jordan): All string queries should be case insensitive.
-  return new RegExp(v, 'i')
+  // NOTE(jordan): If it's a string, it's a string.
+  return v
 }
 
 function parseArray (v) {
@@ -220,11 +234,11 @@ function parseKeyValuePair (key, value) {
 
   console.log(`Parse KV: ${key}, ${value}`)
 
-  if ( specialOperators.some(op => ~key.indexOf(op)) ) {
+  if ( specialOperators.some(op => ~key.indexOf(`$${op}`)) ) {
     console.log(`Parse: special operator: ${key}`)
     const [ operator ] = key.split(':')
     key = operator
-    parsedValue = value
+    parsedValue = parseArray(value).map(parseValue)
     // TODO(jordan): Support $push and etc. here
 
   } else if ( ~value.indexOf('$') ) {
@@ -261,7 +275,8 @@ function parseKeyValuePair (key, value) {
     }
 
   } else {
-    parsedValue = parseValue(value)
+    // NOTE(jordan): All simple string queries should be case insensitive, starts with.
+    parsedValue = new RegExp('^' + value, 'i')
   }
 
   return [ key, parsedValue ]
@@ -299,11 +314,11 @@ function mapCriteriaToMongoose (criteria) {
   for (let fieldOrOperator of Object.keys(criteria)) {
     const value     = criteria[fieldOrOperator]
         , valueKeys = Object.keys(value)
-    if (fieldOrOperator.startsWith('~')) {
+    if (fieldOrOperator.startsWith('$')) {
       // Special operator.
       // Strip the leading '~'.
       const op = fieldOrOperator.substr(1)
-      clauses.push({ [op]: value.split(',') })
+      clauses.push({ [op]: value })
     } else if (valueKeys.length > 0) {
       // Has to be an operator.
       // Let us assume, that there is only one operator.
@@ -320,6 +335,16 @@ function mapCriteriaToMongoose (criteria) {
   }
 
   return clauses
+}
+
+function applyClauses (query, clauses) {
+  for (const clause of clauses) {
+    // NOTE(jordan): Ordinarily I would want to destructure this from a Map. But ah well.
+    const method = Object.keys(clause)[0]
+        , args   = clause[method]
+    query[method](...args)
+  }
+  return query
 }
 
 //router.get('/:program/:pfilter?/application/:action?')
@@ -350,7 +375,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
     // NOTE(jordan): This has to be a program query w/o an Action.
     const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
                          .select('-_id -__v')
-    return Actions.fallback(query, req, res)()
+    return Actions.fallback(query, req, res)
   }
 
   // NOTE(jordan): Clean up route parameters.
@@ -361,6 +386,8 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
   if ( efilter !== undefined && !isFilter(efilter) )
     action = efilter, efilter = undefined
 
+  action = action || 'fallback'
+
   console.log(`
     parsed params:
       program: ${program}
@@ -370,7 +397,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       action: ${action}
   `)
 
-  if ( !(endpoint in Endpoints) ) {
+  if ( endpoint && !(endpoint in Endpoints) ) {
     return res.status(400).send('You done did not give a good endpoint.')
   }
 
@@ -380,12 +407,15 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
     console.log(`Found an application filter: ${pfilter}.`)
     applicationCriteria = parseFilter(pfilter)
     console.log(`Parsed:`, applicationCriteria)
-    clauses = mapCriteriaToMongoose(applicationCriteria)
-    console.log(`Mapped to clauses:`, util.inspect(clauses, { depth: null }))
+    applicationClauses = mapCriteriaToMongoose(applicationCriteria)
+    console.log(`Mapped to clauses:`, util.inspect(applicationClauses, { depth: null }))
   }
 
-  const applicationQuery = Application.find()
-  // Now apply the clauses.
+  const applicationQuery = applyClauses(Application.findOne(), applicationClauses)
+
+  if (!endpoint) {
+    return Actions[action](applicationQuery, req, res)
+  }
 
   let endpointClauses = []
 
@@ -393,38 +423,20 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
     console.log(`Found an endpoint filter: ${efilter}.`)
     endpointCriteria = parseFilter(efilter)
     console.log(`Parsed:`, endpointCriteria)
-    clauses = mapCriteriaToMongoose(endpointCriteria)
-    console.log(`Mapped to clauses:`, util.inspect(clauses, { depth: null }))
+    endpointClauses = mapCriteriaToMongoose(endpointCriteria)
+    console.log(`Mapped to clauses:`, util.inspect(endpointClauses, { depth: null }))
   }
 
   // NOTE(jordan): This silly map would be easier to create if we were using ES6 Imports.
-  const endpointQuery = Endpoints[endpoint].find()
-  // Now apply the clauses.
+  const endpointQuery = applyClauses(Endpoints[endpoint].find(), endpointClauses)
 
-  return res.status(200).send()
-
-  efilter && efilter.split(',').forEach(function(filterArg) {
-    filterArg = filterArg.split(':')
-    var f = filterArg.shift()
-    var v = filterArg.join(':')
-    console.log(f, v)
-    if (f.charAt(0) == '~')
-      query = query[f.slice(1)](v)
-    else if (f == '_id')
-      query = query.where(f).equals(v)
-    else {
-      if (v == 'true') v = true
-      else v = rxsi(v)
-      query = query.where(f).equals(v)
+  applicationQuery.exec().then(data => {
+    if (data === null) {
+      Actions._handleError(res)('Could not find an application for query.')
+    } else {
+      console.log(`Found application for query:`, util.inspect(data, { depth: null }))
+      const finalQuery = endpointQuery.where({ application: data._id })
+      Actions[action](finalQuery, req, res)
     }
-  })
-
-  console.log(pfilter)
-  console.log(efilter)
-
-  if (action in Actions) {
-    Actions[action](query, req, res)(send)
-  } else {
-    query.exec(send)
-  }
+  }).catch(Actions._handleError(res))
 })

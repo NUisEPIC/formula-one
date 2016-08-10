@@ -2,7 +2,14 @@ var mongoose = require('mongoose')
   , Schema = mongoose.Schema
 
 var question = Schema({
-  text: String,
+  application: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'Application',
+  },
+  // TODO(jordan): We have yet to figure out the actual model for the question.
+  // NOTE(jordan): Suppose this is markdown formatted?
+  prompt: String,
   //type: QuestionType,
 })
 
