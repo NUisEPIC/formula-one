@@ -158,9 +158,9 @@ Actions._send = (req, res) => data => {
       || data === NaN
       || (data instanceof Array && data.length === 0)
   ) {
+    // FIXME(jordan): Don't send unwrapped arrays!
     res.send([])
   }
-  // FIXME(jordan): This is far from a bulletproof series of checks and conversions.
   else {
     res.send(isNaN(data) ? data : data.toString())
   }
@@ -172,13 +172,13 @@ Actions._wrapWithErrorHandling = method => (query, req, res) => {
 }
 
 Actions.count = Actions._wrapWithErrorHandling('count')
-Actions.fallback = Actions._wrapWithErrorHandling('exec')
+Actions.exec = Actions._wrapWithErrorHandling('exec')
+Actions.fallback = Actions.exec
 
 const Endpoints = {
   'response': Response,
   'question': Question,
 }
-
 // NOTE(jordan): Aliases the plural form for ease of use.
 Endpoints.responses = Endpoints.response
 Endpoints.questions = Endpoints.question
@@ -220,6 +220,7 @@ function parseKeyValuePair (key, value) {
   const arrayOperators     = [ 'all', 'in', 'nin' ]
       , numericOperators   = [ 'gt', 'gte', 'lt', 'lte', 'size' ]
       , booleanOperators   = [ 'exists' ]
+      // TODO?(jordan): A parseable form of $ne?
       , valueOperators     = [ 'eq', 'ne' ]
       , operatorsWhitelist = [
         ...arrayOperators,
@@ -235,11 +236,16 @@ function parseKeyValuePair (key, value) {
   console.log(`Parse KV: ${key}, ${value}`)
 
   if ( specialOperators.some(op => ~key.indexOf(`$${op}`)) ) {
+    /* NOTE(jordan): Working: 'sort', 'limit', 'skip'.
+     * Slice: [ start, end ] or count
+     * Push: very complex. Unsure how to address atm.
+     */
+    // TODO(jordan): Support push and slice correctly.
     console.log(`Parse: special operator: ${key}`)
     const [ operator ] = key.split(':')
     key = operator
+    // TODO(jordan): Does it ever break for this to always be an array?
     parsedValue = parseArray(value).map(parseValue)
-    // TODO(jordan): Support $push and etc. here
 
   } else if ( ~value.indexOf('$') ) {
     // Supports a subset of https://docs.mongodb.com/manual/reference/operator/query/
@@ -276,6 +282,7 @@ function parseKeyValuePair (key, value) {
 
   } else {
     // NOTE(jordan): All simple string queries should be case insensitive, starts with.
+    // TODO(jordan): Make this "toggleable" via API. Escape with quotes? bang?
     parsedValue = new RegExp('^' + value, 'i')
   }
 
@@ -352,8 +359,7 @@ function applyClauses (query, clauses) {
 router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, res) {
   // NOTE(jordan): Predicates for filter parsing.
   // LIMITATION: Cannot write queries containing "$", ":", or ";".
-  const keyValuePairRx = /^([^:,]+):([^:,]+)$/
-      , filterRx = /^([^:,]+):([^,]+)(?:;([^:,]+):([^:,]+))*/
+  const filterRx = /^([^:,]+):([^,]+)(?:;([^:,]+):([^:,]+))*/
   const isFilter = str => filterRx.test(str)
 
   // NOTE(jordan): Extract route parameters.
@@ -371,13 +377,6 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       4: ${action}
   `)
 
-  if ( !pfilter ) {
-    // NOTE(jordan): This has to be a program query w/o an Action.
-    const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
-                         .select('-_id -__v')
-    return Actions.fallback(query, req, res)
-  }
-
   // NOTE(jordan): Clean up route parameters.
   // If pfilter is not a filter, move everything after pfilter back one.
   if ( pfilter !== undefined && !isFilter(pfilter) )
@@ -386,6 +385,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
   if ( efilter !== undefined && !isFilter(efilter) )
     action = efilter, efilter = undefined
 
+  // NOTE(jordan): Ensure that we have selected an Action and cannot get 'undefined.'
   action = action || 'fallback'
 
   console.log(`
@@ -396,6 +396,13 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       efilter: ${efilter}
       action: ${action}
   `)
+
+  if ( !pfilter ) {
+    // NOTE(jordan): This has to be a program query w/o an Action.
+    const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
+                         .select('-_id -__v')
+    return Actions[action](query, req, res)
+  }
 
   if ( endpoint && !(endpoint in Endpoints) ) {
     return res.status(400).send('You done did not give a good endpoint.')
@@ -432,11 +439,11 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
 
   applicationQuery.exec().then(data => {
     if (data === null) {
-      Actions._handleError(res)('Could not find an application for query.')
+      return Actions._handleError(res)('Could not find an application for query.')
     } else {
       console.log(`Found application for query:`, util.inspect(data, { depth: null }))
       const finalQuery = endpointQuery.where({ application: data._id })
-      Actions[action](finalQuery, req, res)
+      return Actions[action](finalQuery, req, res)
     }
   }).catch(Actions._handleError(res))
 })
