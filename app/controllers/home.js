@@ -10,6 +10,7 @@ var express = require('express')
   , Person = require('../models/person.js').Person
   , User = require('../models/user.js').User
   , util = require('util')
+  , Mailer = require('../../mailer.js');
 
 /* TODO(jordan):
  *  - Split out the filtering logic into its own module
@@ -88,6 +89,7 @@ router.post('/authenticate', function(req, res) {
 // })
 
 // FIXME(jordan): This needs to be replaced with more robust lookup logic.
+
 // router.get('/:program/application/list', function (req, res) {
 
 //   Response.find({
@@ -131,6 +133,69 @@ router.post('/authenticate', function(req, res) {
 //     })
 //   })
 // })
+
+router.post('/:program/application', function(req, res) {
+  Program.findOne({ shortname: req.params.program })
+  .exec(function(err, program) {
+    if (err) console.log(err) && res.send(500, 'Error executing query');
+
+    console.log(program);
+
+    console.log(req.body);
+
+    Response.create({
+      application: ,
+      answers: req.body.answers,
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+    }, function(err, newResponse) {
+      var responseId = newResponse._id;
+      if(err) console.log(err) && res.send(500, 'Error executing query');
+      // TODO(jordan): Update this to use the new mailer api.
+
+      let firstName = newResponse.firstName;
+      let lastName = newResponse.lastName;
+      let email = newResponse.email;
+
+      var data = {
+          subject: `Thanks for your application, ${firstName} ${lastName}!`,
+          to: email,
+          from: 'contact@nuisepic.com',
+      }
+
+      var options = {
+          engine: 'handlebars',
+          template: '<p>Hello {{firstName}} {{lastName}},<br><br>Thanks for applying!'
+          + ' We’ll be in touch soon about your next steps. Feel free to reply'
+          + ' directly to this email with any questions.'
+          + '<br><br>Thanks,<br>The EPIC Team</p>',
+          variables: {
+              firstName: firstName,
+              lastName: lastName,
+              email: email,
+          },
+      }
+
+      Mailer(data, options, function(error, body) {
+          if (error) {
+              console.log(error);
+              res.status(500).send('Error executing query.')
+          }
+          else {
+              console.log(body);
+              newResponse.sentConfirmationEmail = true;
+              newResponse.markModified('sentConfirmationEmail');
+              newResponse.save(function() {
+                  console.log('Response received and confirmation email sent for ' + newResponse.email);
+              })
+              res.status(200).send('Message sent successfully!')
+          }
+      });
+    });
+    // TODO(jordan): add post('save') callback to Responses where if document.isNew, send verification email
+  });
+});
 
 const Actions = { }
 Actions._handleError = res => err => {
