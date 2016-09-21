@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
   , Question = require('./question').Question
 
 var chooseOne = new Schema({
-    options: [
+    questionOptions: [
         {
             type: String,
             required: true,
