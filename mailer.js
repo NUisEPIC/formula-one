@@ -2,7 +2,7 @@ var mailgun = require('mailgun-js')({apiKey: "key-0427e9f62f466535f9d41e5f8d4518
 var accord  = require('accord')
 
 /// Options: object containing template, variables, engine
-module.exports = function (data, options) {
+module.exports = function (data, options, callback) {
   renderer = accord.load(options.engine)
 
   renderer.render(options.template, options.variables)
@@ -10,8 +10,7 @@ module.exports = function (data, options) {
       data.html = res.result
 
       mailgun.messages().send(data, function (error, body) {
-        console.error(error)
-        console.log(body)
+        callback(error, body)
       })
     })
 }
