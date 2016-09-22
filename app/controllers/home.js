@@ -6,7 +6,6 @@ var express = require('express')
   , Application = require('../models/application.js').Application
   , Response = require('../models/response.js').Response
   , Question = require('../models/question.js').Question
-  , Person = require('../models/person.js').Person
   , User = require('../models/user.js').User
   , util = require('util')
   , Mailer = require('../../mailer.js');
@@ -58,8 +57,7 @@ router.post('/authenticate', function(req, res) {
 
       // If the password matches, return a json web token
       if (isMatch) {
-        // FIXME(jordan): There is no token expiry.
-        var token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY)
+        var token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY, { expiresIn: '2h' })
         res.status('200').json(token)
       } else {
         res.status('401').send('Invalid credentials.')
@@ -463,7 +461,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       action: ${action}
   `)
 
-  if ( !pfilter && !efilter && !action ) {
+  if ( !endpoint ) {
     // NOTE(jordan): This has to be a program query w/o an Action.
     const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
                          .select('-_id -__v')
