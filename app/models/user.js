@@ -14,10 +14,6 @@ var user = Schema({
         type: String,
         required: true,
     },
-    person: {
-        type: Schema.Types.ObjectId,
-        ref: 'Person',
-    },
 })
 
 // Save a hash of the password rather than plain text
