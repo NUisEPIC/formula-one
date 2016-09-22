@@ -15,7 +15,7 @@ var program = new Schema({
     required: true,
   },
   description: String,
-  startYear: Date,
+  startYear: Number,
   currentlyLiveApplication: {
       type: Schema.Types.ObjectId,
       ref: 'Application',
