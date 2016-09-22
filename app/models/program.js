@@ -16,13 +16,11 @@ var program = new Schema({
   },
   description: String,
   startYear: Date,
-})
+  currentlyLiveApplication: {
+      type: Schema.Types.ObjectId,
+      ref: 'Application',
+  }
+});
 
-program.virtual('applications', {
-  ref: 'Application',
-  localField: '_id',
-  foreignField: 'program',
-})
-
-module.exports.program = program
-module.exports.Program = mongoose.model('Program', program)
+module.exports.program = program;
+module.exports.Program = mongoose.model('Program', program);
