@@ -1,6 +1,5 @@
 var express = require('express')
   , router = express.Router()
-  , mongoose = require('mongoose')
   , expressJWT = require('express-jwt')
   , jwt = require('jsonwebtoken')
   , Program = require('../models/program.js').Program
@@ -136,6 +135,7 @@ router.post('/authenticate', function(req, res) {
 
 router.post('/:program/application', function(req, res) {
   Program.findOne({ shortname: req.params.program })
+  .populate('currentlyLiveApplication')
   .exec(function(err, program) {
     if (err) console.log(err) && res.send(500, 'Error executing query');
 
@@ -143,8 +143,10 @@ router.post('/:program/application', function(req, res) {
 
     console.log(req.body);
 
+    const app = program.currentlyLiveApplication;
+
     Response.create({
-      application: ,
+      application: app._id,
       answers: req.body.answers,
       email: req.body.email,
       firstName: req.body.firstName,
@@ -153,6 +155,8 @@ router.post('/:program/application', function(req, res) {
       var responseId = newResponse._id;
       if(err) console.log(err) && res.send(500, 'Error executing query');
       // TODO(jordan): Update this to use the new mailer api.
+
+      console.log(newResponse.application)
 
       let firstName = newResponse.firstName;
       let lastName = newResponse.lastName;
