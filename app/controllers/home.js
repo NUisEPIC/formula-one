@@ -139,10 +139,6 @@ router.post('/:program/application', function(req, res) {
   .exec(function(err, program) {
     if (err) console.log(err) && res.send(500, 'Error executing query');
 
-    console.log(program);
-
-    console.log(req.body);
-
     const app = program.currentlyLiveApplication;
 
     Response.create({
@@ -247,6 +243,7 @@ Actions.fallback = Actions.exec
 const Endpoints = {
   'response': Response,
   'question': Question,
+  'application': Application,
 }
 // NOTE(jordan): Aliases the plural form for ease of use.
 Endpoints.responses = Endpoints.response
@@ -466,7 +463,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
       action: ${action}
   `)
 
-  if ( !pfilter ) {
+  if ( !pfilter && !efilter && !action ) {
     // NOTE(jordan): This has to be a program query w/o an Action.
     const query = Program.findOne({ $or: [{ shortname: program }, { name: program }] })
                          .select('-_id -__v')
@@ -489,7 +486,7 @@ router.get('/:program/:pfilter?/:endpoint?/:efilter?/:action?', function(req, re
 
   const applicationQuery = applyClauses(Application.findOne(), applicationClauses)
 
-  if (!endpoint) {
+  if (endpoint === 'application') {
     return Actions[action](applicationQuery, req, res)
   }
 
